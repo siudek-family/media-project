@@ -7,7 +7,10 @@ pytest
 ```
 
 ## Naming convention
-All python files named ver_*.py are designed to be run periodically to do some checks and display results and potential action points
+All python files named"
+- ver_*.py are designed to be run periodically to do some checks and display results and potential action points
+- act_*.py are designed to be run manually to perform some actions on media files
+- qry_*.py are designed to be run manually to query some information from media files
 
 ## Verification scripts
 
