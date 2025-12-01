@@ -1,24 +1,29 @@
 package net.siudek.media.shell;
 
+import java.nio.file.Path;
+
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
-import org.springframework.shell.standard.ShellOption;
+
+import net.siudek.media.Source;
+import net.siudek.media.Sources;
 
 @ShellComponent
 public class HelloWorldCommands {
 
-    @ShellMethod(value = "Says hello to the world", key = "hello")
-    public String hello() {
-        return "Hello World from Spring Shell!";
+    // shell Start method 
+    @ShellMethod(value = "Start the shell application", key = "start")
+    public String start() {
+        var currentPath = Path.of("").toAbsolutePath();
+        
+
+        var rootDir = Sources.of(currentPath.getParent());
+
+        var typed = switch (rootDir) {
+            case Source.RootDir r -> r;
+        };
+
+        return "Hello, Media Shell! Current source: " + typed;
     }
 
-    @ShellMethod(value = "Greets a person by name", key = "greet")
-    public String greet(@ShellOption(defaultValue = "User") String name) {
-        return String.format("Hello, %s! Welcome to Spring Shell.", name);
-    }
-
-    @ShellMethod(value = "Adds two numbers", key = "add")
-    public String add(int a, int b) {
-        return String.format("%d + %d = %d", a, b, a + b);
-    }
 }
