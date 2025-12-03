@@ -23,20 +23,32 @@ public class HelloWorldCommands {
         
         var rootDir = Sources.of(currentPath.getParent());
 
-        var result = switch (rootDir) {
-            case Source.RootDir r -> act(r);
+        switch (rootDir) {
+            case Source.RootDir it -> act(it);
+            case Source.Dir it -> act(it);
+            case Source.File it -> act(it);
         };
 
-        return "The end. Files: " + result;
+        return "The end.";
     }
 
     @SneakyThrows(java.io.IOException.class)
-    long act(Source.RootDir dir) {
+    void act(Source.RootDir dir) {
         var source = dir.source();
-        return Files.walk(source)
+        Files.walk(source)
             .filter(it -> !Files.isDirectory(it))
             .peek(it -> Sources.of(it))
             .count();
     }
+
+    void act(Source.Dir dir) {
+        // TODO implement
+    }
+
+    void act(Source.File file) {
+        // TODO implement
+    }
+
+
 
 }
