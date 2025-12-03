@@ -10,7 +10,7 @@ public final class Sources {
     }
 
     public static Source of(Path path) {
-        var maybeIsRootDir = isRootDir(path);
+        var maybeIsRootDir = isRootDir(path.getParent());
         if (maybeIsRootDir.isPresent()) {
             return maybeIsRootDir.get();
         }
@@ -20,22 +20,22 @@ public final class Sources {
     private static Optional<Source.RootDir> isRootDir(Path path) {
         final String docs = ".docs";
         final Optional<Source.RootDir> noResult = Optional.empty();
-        if (path.resolve(docs).toFile().exists()) {
+        if (!path.resolve(docs).toFile().exists()) {
             return noResult;
         }
         final String project = ".project";
-        if (path.resolve(project).toFile().exists()) {
+        if (!path.resolve(project).toFile().exists()) {
             return noResult;
         }
-        final String source = "source";
-        if (path.resolve(source).toFile().exists()) {
+        var source = path.resolve("source");
+        if (!source.toFile().exists()) {
             return noResult;
         }
-        final String target = "target";
-        if (path.resolve(target).toFile().exists()) {
+        var target = path.resolve("target");
+        if (!target.toFile().exists()) {
             return noResult;
         }
-        var result = new Source.RootDir(path);
+        var result = new Source.RootDir(path, source, target);
         return Optional.of(result);
     }
 
