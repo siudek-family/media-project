@@ -76,15 +76,7 @@ public final class Sources {
 
       var subdirs = Files.list(path)
           .filter(Files::isDirectory)
-          .map(p -> {
-            var a = switch (asMediaDir(p)) {
-                case Source.MediaDir md -> md;
-                case Source.GitDir it -> null;
-                case Source.DvdDir _ -> null;
-            };
-            return a;
-          })
-          .filter(it -> it != null)
+          .map(p -> asMediaDir(p))
           .toList();
       var files = Files.list(path)
           .filter(p -> !Files.isDirectory(p))

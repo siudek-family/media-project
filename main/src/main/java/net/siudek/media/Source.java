@@ -8,7 +8,7 @@ public sealed interface Source {
     sealed interface File extends Source {}
     record RootDir(Path value, Dir source, Path target) implements Source {}
 
-    record MediaDir(Iterable<MediaDir> subdirs, Iterable<File> files) implements Dir {}
+    record MediaDir(Iterable<Dir> subdirs, Iterable<File> files) implements Dir {}
     record GitDir(Path value) implements Dir {}
     record DvdDir(Path value) implements Dir {}
 
