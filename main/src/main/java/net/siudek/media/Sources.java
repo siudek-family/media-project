@@ -1,7 +1,10 @@
 package net.siudek.media;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+
+import lombok.SneakyThrows;
 
 public final class Sources {
     
@@ -10,9 +13,13 @@ public final class Sources {
     }
 
     public static Source of(Path path) {
-        var maybeIsRootDir = isRootDir(path.getParent());
+        var maybeIsRootDir = isRootDir(path);
         if (maybeIsRootDir.isPresent()) {
             return maybeIsRootDir.get();
+        }
+        var maybeIsGitDir = isGitRepository(path);
+        if (maybeIsGitDir.isPresent()) {
+            return maybeIsGitDir.get();
         }
         throw new IllegalArgumentException("Unsupported source directory: " + path);
     }
@@ -28,15 +35,85 @@ public final class Sources {
             return noResult;
         }
         var source = path.resolve("source");
-        if (!source.toFile().exists()) {
+        if (!source.toFile().exists() && !source.toFile().isDirectory()) {
             return noResult;
         }
         var target = path.resolve("target");
         if (!target.toFile().exists()) {
             return noResult;
         }
-        var result = new Source.RootDir(path, source, target);
+        var sourceDir = asMediaDir(source);
+        var result = new Source.RootDir(path, sourceDir, target);
         return Optional.of(result);
     }
 
+    public static Optional<Source.GitDir> isGitRepository(Path path) {
+        if (path == null) {
+            return Optional.empty();
+        }
+        var dirName = path.getName(path.getNameCount()-1);
+        var isGit = dirName.toString().equals(".git") && path.toFile().isDirectory();
+        return isGit ? Optional.of(new Source.GitDir(path)) : Optional.empty();
+    }
+
+    @SneakyThrows(java.io.IOException.class)
+    static Source.Dir asMediaDir(Path path) {
+
+      if (isGitRepository(path).isPresent()) {
+          return new Source.GitDir(path);
+      }
+
+      var subdirs = Files.list(path)
+          .filter(Files::isDirectory)
+          .map(p -> {
+            var a = switch (asMediaDir(p)) {
+                case Source.MediaDir md -> md;
+                case Source.GitDir _ -> null;
+            };
+            return a;
+          })
+          .filter(it -> it != null)
+          .toList();
+      var files = Files.list(path)
+          .filter(p -> !Files.isDirectory(p))
+          .map(p -> asFile(p))
+          .toList();
+        return new Source.MediaDir(subdirs, files);
+    }
+
+    static Source.File asFile(Path path) {
+        var fileName = path.getFileName().toString().toLowerCase();
+        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
+            return new Source.JpgFile(path);
+        }
+        if (fileName.endsWith(".yml") || fileName.endsWith(".yaml")) {
+            return new Source.YmlFile(path);
+        }
+        if (fileName.endsWith(".json")) {
+            return new Source.JsonFile(path);
+        }
+        if (fileName.endsWith(".png")) {
+            return new Source.PngFile(path);
+        }
+        if (fileName.endsWith(".pdf")) {
+            return new Source.PdfFile(path);
+        }
+        if (fileName.endsWith(".amr")) {
+            return new Source.AmrFile(path);
+        }
+        if (fileName.endsWith(".txt")) {
+            return new Source.TxtFile(path);
+        }
+        if (fileName.endsWith(".gitignore")) {
+            return new Source.GitignoreFile(path);
+        }
+        if (fileName.endsWith(".m4a")) {
+            return new Source.M4aFile(path);
+        }
+        if (fileName.endsWith(".mkv")) {
+            return new Source.MkvFile(path);
+        }
+        throw new IllegalArgumentException("Unsupported file type: " + path);
+    }
+    
 }

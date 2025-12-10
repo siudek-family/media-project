@@ -1,13 +1,11 @@
 package net.siudek.media.shell;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 
-import lombok.SneakyThrows;
 import net.siudek.media.Source;
 import net.siudek.media.Sources;
 
@@ -21,7 +19,8 @@ public class HelloWorldCommands {
     public String start() {
         var currentPath = Path.of("").toAbsolutePath();
         
-        var rootDir = Sources.of(currentPath.getParent());
+        var rootProject = currentPath.getParent().getParent();
+        var rootDir = Sources.of(rootProject);
 
         switch (rootDir) {
             case Source.RootDir it -> act(it);
@@ -32,16 +31,31 @@ public class HelloWorldCommands {
         return "The end.";
     }
 
-    @SneakyThrows(java.io.IOException.class)
     void act(Source.RootDir dir) {
-        var source = dir.source();
-        Files.walk(source)
-            .filter(it -> !Files.isDirectory(it))
-            .peek(it -> Sources.of(it))
-            .count();
+        var sourceDir = dir.source();
+        act(sourceDir);
     }
 
     void act(Source.Dir dir) {
+        switch (dir) {
+            case Source.MediaDir md -> act(md);
+            case Source.GitDir gd -> act(gd);
+        };
+    }
+
+    void act(Source.MediaDir dir) {
+        for (var subdir : dir.subdirs()) {
+            System.out.println("Subdir: " + subdir);
+            act(subdir);
+        };
+        for (var file : dir.files()) {
+            System.out.println("File: " + file);
+            act(file);
+        };
+
+    }
+
+    void act(Source.GitDir dir) {
         // TODO implement
     }
 
