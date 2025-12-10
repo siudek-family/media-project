@@ -10,6 +10,7 @@ public sealed interface Source {
 
     record MediaDir(Iterable<MediaDir> subdirs, Iterable<File> files) implements Dir {}
     record GitDir(Path value) implements Dir {}
+    record DvdDir(Path value) implements Dir {}
 
     record JpgFile(Path value) implements File {}
     record YmlFile(Path value) implements File {}
@@ -21,4 +22,18 @@ public sealed interface Source {
     record GitignoreFile(Path value) implements File {}
     record M4aFile(Path value) implements File {}
     record MkvFile(Path value) implements File {}
+    record Mp4File(Path value) implements File {}
+    record DngFile(Path value) implements File {}
+    record MovFile(Path value) implements File {}
+    record AviFile(Path value) implements File {}
+    record WavFile(Path value) implements File {}
+    record DocxFile(Path value) implements File {}
+    record RagFile(Path value) implements File {}
+    record Vid3gpFile(Path value) implements File {}
+    record GifFile(Path value) implements File {}
+    record NpoFile(Path value) implements File {}
+    record NarFile(Path value) implements File {}
+    record MpoFile(Path value) implements File {}
+    record HeicFile(Path value) implements File {}
+    record Mp3File(Path value) implements File {}
 }

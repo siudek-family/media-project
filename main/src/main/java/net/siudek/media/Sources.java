@@ -55,6 +55,14 @@ public final class Sources {
         var isGit = dirName.toString().equals(".git") && path.toFile().isDirectory();
         return isGit ? Optional.of(new Source.GitDir(path)) : Optional.empty();
     }
+    public static Optional<Source.DvdDir> isDvdDirectory(Path path) {
+        if (path == null) {
+            return Optional.empty();
+        }
+        // if dir contains file 'VIDEO_TS.BUP' then it is a DVD directory
+        var isDvd = path.resolve("VIDEO_TS.BUP").toFile().exists() || path.resolve("VIDEO_RM.BUP").toFile().exists();
+        return isDvd ? Optional.of(new Source.DvdDir(path)) : Optional.empty();
+    }
 
     @SneakyThrows(java.io.IOException.class)
     static Source.Dir asMediaDir(Path path) {
@@ -62,13 +70,17 @@ public final class Sources {
       if (isGitRepository(path).isPresent()) {
           return new Source.GitDir(path);
       }
+      if (isDvdDirectory(path).isPresent()) {
+        return new Source.DvdDir(path);
+      }
 
       var subdirs = Files.list(path)
           .filter(Files::isDirectory)
           .map(p -> {
             var a = switch (asMediaDir(p)) {
                 case Source.MediaDir md -> md;
-                case Source.GitDir _ -> null;
+                case Source.GitDir it -> null;
+                case Source.DvdDir _ -> null;
             };
             return a;
           })
@@ -112,6 +124,48 @@ public final class Sources {
         }
         if (fileName.endsWith(".mkv")) {
             return new Source.MkvFile(path);
+        }
+        if (fileName.endsWith(".mp4")) {
+            return new Source.Mp4File(path);
+        }
+        if (fileName.endsWith(".dng")) {
+            return new Source.DngFile(path);
+        }
+        if (fileName.endsWith(".mov")) {
+            return new Source.MovFile(path);
+        }
+        if (fileName.endsWith(".avi")) {
+            return new Source.AviFile(path);
+        }
+        if (fileName.endsWith(".wav")) {
+            return new Source.WavFile(path);
+        }
+        if (fileName.endsWith(".docx")) {
+            return new Source.DocxFile(path);
+        }
+        if (fileName.endsWith(".rag")) {
+            return new Source.RagFile(path);
+        }
+        if (fileName.endsWith(".3gp")) {
+            return new Source.Vid3gpFile(path);
+        }
+        if (fileName.endsWith(".gif")) {
+            return new Source.GifFile(path);
+        }
+        if (fileName.endsWith(".npo")) {
+            return new Source.NpoFile(path);
+        }
+        if (fileName.endsWith(".nar")) {
+            return new Source.NarFile(path);
+        }
+        if (fileName.endsWith(".mpo")) {
+            return new Source.MpoFile(path);
+        }
+        if (fileName.endsWith(".heic")) {
+            return new Source.HeicFile(path);
+        }
+        if (fileName.endsWith(".mp3")) {
+            return new Source.Mp3File(path);
         }
         throw new IllegalArgumentException("Unsupported file type: " + path);
     }

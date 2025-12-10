@@ -40,6 +40,7 @@ public class HelloWorldCommands {
         switch (dir) {
             case Source.MediaDir md -> act(md);
             case Source.GitDir gd -> act(gd);
+            case Source.DvdDir dd -> act(dd);
         };
     }
 
@@ -56,6 +57,10 @@ public class HelloWorldCommands {
     }
 
     void act(Source.GitDir dir) {
+        // TODO implement
+    }
+
+    void act(Source.DvdDir dir) {
         // TODO implement
     }
 
