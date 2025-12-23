@@ -8,7 +8,7 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = {
 	"spring.shell.interactive.enabled=false"
 })
-class MediaApplicationTests {
+class ProgramTests {
 
 	@Test
 	void contextLoads() {
