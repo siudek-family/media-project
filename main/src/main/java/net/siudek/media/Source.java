@@ -17,9 +17,16 @@ public sealed interface Source {
     record JsonFile(Path value) implements File {}
     record PngFile(Path value) implements File {}
     record PdfFile(Path value) implements File {}
+    
+    /** Audio file. */
+
     record AmrFile(Path value) implements File {}
+
+    /** We should not have TXT files, should be reviewed what we have in media directory. */
     record TxtFile(Path value) implements File {}
+
     record GitignoreFile(Path value) implements File {}
+
     record M4aFile(Path value) implements File {}
     record MkvFile(Path value) implements File {}
     record Mp4File(Path value) implements File {}

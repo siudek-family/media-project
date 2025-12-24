@@ -24,8 +24,7 @@ public class HelloWorldCommands {
 
         switch (rootDir) {
             case Source.RootDir it -> act(it);
-            case Source.Dir it -> act(it);
-            case Source.File it -> act(it);
+            default -> throw new IllegalStateException("Unsupported root dir: " + rootDir);
         };
 
         return "The end.";
