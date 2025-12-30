@@ -2,7 +2,7 @@ package net.siudek.media;
 
 import java.nio.file.Path;
 
-/** All supported types of directories, allowed to be a part of Media sources. */
+/// All supported types of directories and files, allowed to be a part of Media assets.  
 public sealed interface Source {
     sealed interface Dir extends Source {}
     sealed interface File extends Source {}
@@ -19,7 +19,6 @@ public sealed interface Source {
     record PdfFile(Path value) implements File {}
     
     /** Audio file. */
-
     record AmrFile(Path value) implements File {}
 
     /** We should not have TXT files, should be reviewed what we have in media directory. */
