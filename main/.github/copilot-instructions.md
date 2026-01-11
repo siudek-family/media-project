@@ -136,7 +136,7 @@ Reference [java.instructions.md](instructions/java.instructions.md) for project-
 - **Immutability**: Favor `final` classes and collections from `List.of()`, `Stream.toList()`
 - **Null handling**: Use `Optional<T>` for possibly-absent values
 - **Resource management**: Use try-with-resources for file I/O
-- **Build verification**: Always run `mvnw clean install` after changes
+- **Build verification**: Always run `.\mvnw clean install` after changes
 
 ## When Adding New Features
 

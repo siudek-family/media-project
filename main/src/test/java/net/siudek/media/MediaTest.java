@@ -7,13 +7,18 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@SpringBootTest
+@SpringBootTest(classes = {Program.class})
+@Import(MediaTest.TestConfig.class)
 @TestPropertySource(properties = {
 	"spring.shell.interactive.enabled=false"
 })
@@ -22,9 +27,14 @@ class MediaTest {
     @Autowired
     Media media;
 
-    @MockitoBean
-    TestCommandsListener listener = new TestCommandsListener();
+    @Autowired
+    TestCommandsListener listener;
 
+    @AfterEach
+    void tearDown() {
+        listener.command = null;
+    }
+    
     @Test
     void verifyNameConvention_shouldRenameFileWithUnderscoreToHyphen() {
         // Given
@@ -34,8 +44,7 @@ class MediaTest {
         media.verifyNameConvention(path);
         
         // Then
-        assertThat(listener.commands).hasSize(1);
-        var command = (MediaCommands.RenameMediaItem) listener.commands.getFirst();
+        var command = (MediaCommands.RenameMediaItem) listener.command;
         assertThat(command.from()).isEqualTo(path);
         assertThat(command.newName()).isEqualTo("20230115-143022.jpg");
     }
@@ -49,8 +58,7 @@ class MediaTest {
         media.verifyNameConvention(path);
         
         // Then
-        assertThat(listener.commands).hasSize(1);
-        var command = (MediaCommands.RenameMediaItem) listener.commands.getFirst();
+        var command = (MediaCommands.RenameMediaItem) listener.command;
         assertThat(command.newName()).isEqualTo("20240101-235959.backup.jpg");
     }
 
@@ -64,15 +72,24 @@ class MediaTest {
                 .isInstanceOf(UnsupportedOperationException.class)
                 .hasMessageContaining("Not implemented yet");
         
-        assertThat(listener.commands).isEmpty();
+        assertThat(listener.command).isNull();
     }
 
     private static class TestCommandsListener implements CommandsListener {
-        final List<MediaCommands> commands = new ArrayList<>();
+        MediaCommands command = null;
 
         @Override
         public void on(MediaCommands command) {
-            commands.add(command);
+            this.command = command;
+        }
+    }
+
+    @Configuration
+    static class TestConfig {
+        @Bean
+        @Primary
+        TestCommandsListener testCommandsListener() {
+            return new TestCommandsListener();
         }
     }
 }

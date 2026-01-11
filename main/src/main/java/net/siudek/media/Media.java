@@ -2,6 +2,7 @@ package net.siudek.media;
 
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.stereotype.Component;
@@ -15,8 +16,7 @@ import net.siudek.media.rename.RenameStrategy;
 @Component
 public class Media {
     
-    private final CommandsListener commandsListener;
-    private final Set<RenameStrategy> renameStrategies;
+    private final List<RenameStrategy> renameStrategies;
 
     public Set<MediaItem> toMedia(Source.RootDir rootDir) {
         var result = new HashSet<MediaItem>();
