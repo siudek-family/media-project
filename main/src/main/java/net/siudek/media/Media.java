@@ -3,6 +3,9 @@ package net.siudek.media;
 import java.util.HashSet;
 import java.util.Set;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class Media {
     
     public static Set<MediaItem> toMedia(Source.RootDir rootDir) {
@@ -46,76 +49,76 @@ public class Media {
         for (var file : mediaDir.files()) {
             switch (file) {
                 case Source.JpgFile jpgFile -> {
-                    // TODO process
+                    log.info("TODO: Processing JPG file: {}", jpgFile.value());
                 }
                 case Source.Mp4File mp4File -> {
-                    // TODO process
+                    log.info("TODO: Processing MP4 file: {}", mp4File.value());
                 }
                 case Source.MkvFile mkvFile -> {
-                    // TODO process
+                    log.info("TODO: Processing MKV file: {}", mkvFile.value());
                 }
                 case Source.Mp3File mp3File -> {
-                    // TODO process
+                    log.info("TODO: Processing MP3 file: {}", mp3File.value());
                 }
                 case Source.PngFile pngFile -> {
-                    // TODO process
+                    log.info("TODO: Processing PNG file: {}", pngFile.value());
                 }
                 case Source.PdfFile pdfFile -> {
-                    // TODO process
+                    log.info("TODO: Processing PDF file: {}", pdfFile.value());
                 }
                 case Source.YmlFile ymlFile -> {
-                    // TODO process
+                    log.info("TODO: Processing YML file: {}", ymlFile.value());
                 }
                 case Source.JsonFile jsonFile -> {
-                    // TODO process
+                    log.info("TODO: Processing JSON file: {}", jsonFile.value());
                 }
                 case Source.AmrFile amrFile -> {
-                    // TODO process
+                    log.info("TODO: Processing AMR file: {}", amrFile.value());
                 }
                 case Source.TxtFile txtFile -> {
                     throw new IllegalStateException("TXT files should not be present in media directories: " + txtFile.value());
                 }
                 case Source.GitignoreFile gitignoreFile -> {
-                    // TODO process
+                    log.info("TODO: Processing GITIGNORE file: {}", gitignoreFile.value());
                 }
                 case Source.M4aFile m4aFile -> {
-                    // TODO process
+                    log.info("TODO: Processing M4A file: {}", m4aFile.value());
                 }
                 case Source.DngFile dngFile -> {
-                    // TODO process
+                    log.info("TODO: Processing DNG file: {}", dngFile.value());
                 }
                 case Source.MovFile movFile -> {
-                    // TODO process
+                    log.info("TODO: Processing MOV file: {}", movFile.value());
                 }
                 case Source.AviFile aviFile -> {
-                    // TODO process
+                    log.info("TODO: Processing AVI file: {}", aviFile.value());
                 }
                 case Source.WavFile wavFile -> {
-                    // TODO process
+                    log.info("TODO: Processing WAV file: {}", wavFile.value());
                 }
                 case Source.DocxFile docxFile -> {
-                    // TODO process
+                    log.info("TODO: Processing DOCX file: {}", docxFile.value());
                 }
                 case Source.RagFile ragFile -> {
-                    // TODO process
+                    log.info("TODO: Processing RAG file: {}", ragFile.value());
                 }
                 case Source.Vid3gpFile vid3gpFile -> {
-                    // TODO process
+                    log.info("TODO: Processing 3GP file: {}", vid3gpFile.value());
                 }
                 case Source.GifFile gifFile -> {
-                    // TODO process
+                    log.info("TODO: Processing GIF file: {}", gifFile.value());
                 }
                 case Source.NpoFile npoFile -> {
-                    // TODO process
+                    log.info("TODO: Processing NPO file: {}", npoFile.value());
                 }
                 case Source.NarFile narFile -> {
-                    // TODO process
+                    log.info("TODO: Processing NAR file: {}", narFile.value());
                 }
                 case Source.MpoFile mpoFile -> {
-                    // TODO process
+                    log.info("TODO: Processing MPO file: {}", mpoFile.value());
                 }
                 case Source.HeicFile heicFile -> {
-                    // TODO process
+                    log.info("TODO: Processing HEIC file: {}", heicFile.value());
                 }
             }
         }
