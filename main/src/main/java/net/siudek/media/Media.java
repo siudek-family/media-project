@@ -59,7 +59,7 @@ public class Media {
         for (var mediaFile : mediaDir.files()) {
             switch (mediaFile) {
                 case Source.JpgFile file -> {
-                    verifyNameConvention(file.value(), commandsListener);
+                    verifyNameConvention(file.value());
                 }
                 case Source.Mp4File mp4File -> {
                     log.info("TODO: Processing MP4 file: {}", mp4File.value());
