@@ -1,0 +1,64 @@
+package net.siudek.media.rename;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import java.nio.file.Path;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+
+import net.siudek.media.CommandsListener;
+import net.siudek.media.MediaCommands;
+
+@DisplayName("Generic1RenameStrategy")
+class Generic1RenameStrategyTest {
+
+    private final CommandsListener commandsListener = mock();
+    private final Generic1RenameStrategy strategy = new Generic1RenameStrategy(commandsListener);
+
+    @Test
+    @DisplayName("should rename file with yyyyMMdd_hhmmss pattern to yyyyMMdd-hhmmss pattern")
+    void shouldRenameFileWithUnderscoreSeparator() {
+        var filePath = Path.of("/path/20231225_153045.jpg");
+        
+        var result = strategy.tryRename(filePath);
+        
+        assertThat(result).isTrue();
+        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20231225-153045.jpg"));
+    }
+
+    @Test
+    @DisplayName("should preserve file extension during rename")
+    void shouldPreserveFileExtension() {
+        var filePath = Path.of("/path/20231225_153045.amr");
+        
+        var result = strategy.tryRename(filePath);
+        
+        assertThat(result).isTrue();
+        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20231225-153045.amr"));
+    }
+
+    @Test
+    @DisplayName("should return false for non-matching file pattern")
+    void shouldReturnFalseForNonMatchingPattern() {
+        var filePath = Path.of("/path/20231225-153045.jpg");
+        
+        var result = strategy.tryRename(filePath);
+        
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("should handle files with additional suffix after time")
+    void shouldHandleAdditionalSuffix() {
+        var filePath = Path.of("/path/20231225_153045.extra.jpg");
+        
+        var result = strategy.tryRename(filePath);
+        
+        assertThat(result).isTrue();
+        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20231225-153045.extra.jpg"));
+    }
+
+}

@@ -10,7 +10,6 @@
 	<artifactId>media</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>media</name>
-	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>25</java.version>
 	</properties>
@@ -55,9 +54,9 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<fork>true</fork>
 					<systemPropertyVariables>
 						<org.jline.terminal.dumb>true</org.jline.terminal.dumb>
+						<file.encoding>UTF-8</file.encoding>
 					</systemPropertyVariables>
 				</configuration>
 			</plugin>

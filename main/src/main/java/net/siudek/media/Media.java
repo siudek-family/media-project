@@ -1,14 +1,24 @@
 package net.siudek.media;
 
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.siudek.media.rename.RenameStrategy;
 
 @Slf4j
+@RequiredArgsConstructor
+@Component
 public class Media {
     
-    public static Set<MediaItem> toMedia(Source.RootDir rootDir) {
+    private final CommandsListener commandsListener;
+    private final Set<RenameStrategy> renameStrategies;
+
+    public Set<MediaItem> toMedia(Source.RootDir rootDir) {
         var result = new HashSet<MediaItem>();
 
         process(rootDir, result);
@@ -16,7 +26,7 @@ public class Media {
         return result;
     }
 
-    static void process(Source.RootDir source, Set<MediaItem> result) {
+    void process(Source.RootDir source, Set<MediaItem> result) {
         
         switch (source.source()) {
             case Source.MediaDir mediaDir -> {
@@ -32,7 +42,7 @@ public class Media {
         }
     }
     
-    static void process(Source.MediaDir mediaDir, Set<MediaItem> result) {
+    void process(Source.MediaDir mediaDir, Set<MediaItem> result) {
         for (var dir : mediaDir.subdirs()) {
             switch (dir) {
                 case Source.MediaDir subMediaDir -> {
@@ -46,10 +56,10 @@ public class Media {
                 }
             }
         }
-        for (var file : mediaDir.files()) {
-            switch (file) {
-                case Source.JpgFile jpgFile -> {
-                    log.info("TODO: Processing JPG file: {}", jpgFile.value());
+        for (var mediaFile : mediaDir.files()) {
+            switch (mediaFile) {
+                case Source.JpgFile file -> {
+                    verifyNameConvention(file.value(), commandsListener);
                 }
                 case Source.Mp4File mp4File -> {
                     log.info("TODO: Processing MP4 file: {}", mp4File.value());
@@ -72,11 +82,8 @@ public class Media {
                 case Source.JsonFile jsonFile -> {
                     log.info("TODO: Processing JSON file: {}", jsonFile.value());
                 }
-                case Source.AmrFile amrFile -> {
-                    log.info("TODO: Processing AMR file: {}", amrFile.value());
-                }
-                case Source.TxtFile txtFile -> {
-                    throw new IllegalStateException("TXT files should not be present in media directories: " + txtFile.value());
+                case Source.AmrFile file -> {
+                    verifyNameConvention(file.value());
                 }
                 case Source.GitignoreFile gitignoreFile -> {
                     log.info("TODO: Processing GITIGNORE file: {}", gitignoreFile.value());
@@ -97,7 +104,7 @@ public class Media {
                     log.info("TODO: Processing WAV file: {}", wavFile.value());
                 }
                 case Source.DocxFile docxFile -> {
-                    log.info("TODO: Processing DOCX file: {}", docxFile.value());
+                    throw new IllegalStateException("DOCX files should not be present in media directories: " + docxFile.value());
                 }
                 case Source.RagFile ragFile -> {
                     log.info("TODO: Processing RAG file: {}", ragFile.value());
@@ -122,6 +129,23 @@ public class Media {
                 }
             }
         }
+    }
+
+    /// Filenames should be defined in form of yyyyMMdd-hhmmss.
+    /// If name is different, we should try to define conversion method of its current name to proper one.
+    public void verifyNameConvention(Path value) {
+
+        var validStrategies = renameStrategies.stream().filter(rs -> rs.tryRename(value)).toList();
+        if (validStrategies.size() > 1) {
+            throw new IllegalStateException("Multiple rename strategies matched for file: " + value);
+        }
+        if (validStrategies.size() == 1) {
+            return;
+        }
+
+        // TODO when attribute "creationTime" is available, and that attribute is same as year / month updirectory, we should rename the file
+        // in other case, we should throw an exception
+        throw new UnsupportedOperationException("Not implemented yet: verifyNameConvention for " + value);
     }
 
 }

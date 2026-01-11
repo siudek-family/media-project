@@ -1,0 +1,64 @@
+package net.siudek.media.rename;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
+import java.nio.file.Path;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+
+import net.siudek.media.CommandsListener;
+import net.siudek.media.MediaCommands;
+
+@DisplayName("Amr1RenameStrategy")
+class Amr1RenameStrategyTest {
+
+    private final CommandsListener commandsListener = mock();
+    private final Amr1RenameStrategy strategy = new Amr1RenameStrategy(commandsListener);
+
+    @Test
+    @DisplayName("should rename phone call AMR file with date-time space-separated pattern")
+    void shouldRenamePhoneCallAMRFile() {
+        var filePath = Path.of("/path/2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr");
+        
+        var result = strategy.tryRename(filePath);
+        
+        assertThat(result).isTrue();
+        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20211114-155745.outcoming.2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr"));
+    }
+
+    @Test
+    @DisplayName("should return false for non-matching file pattern")
+    void shouldReturnFalseForNonMatchingPattern() {
+        var filePath = Path.of("/path/2021-11-14_15-57-45_some_file.amr");
+        
+        var result = strategy.tryRename(filePath);
+        
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    @DisplayName("should handle files with various metadata in filename")
+    void shouldHandleMetadataInFilename() {
+        var filePath = Path.of("/path/2022-05-20 10-30-15 (incoming) John Doe (+1 234 567 8900).amr");
+        
+        var result = strategy.tryRename(filePath);
+        
+        assertThat(result).isTrue();
+        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20220520-103015.outcoming.2022-05-20 10-30-15 (incoming) John Doe (+1 234 567 8900).amr"));
+    }
+
+    @Test
+    @DisplayName("should correctly extract date and time components")
+    void shouldCorrectlyExtractDateAndTime() {
+        var filePath = Path.of("/path/2023-12-25 23-59-59 test.amr");
+        
+        var result = strategy.tryRename(filePath);
+        
+        assertThat(result).isTrue();
+        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20231225-235959.outcoming.test.amr"));
+    }
+
+}

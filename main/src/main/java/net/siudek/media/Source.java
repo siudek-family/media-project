@@ -21,9 +21,6 @@ public sealed interface Source {
     /** Audio file. */
     record AmrFile(Path value) implements File {}
 
-    /** We should not have TXT files, should be reviewed what we have in media directory. */
-    record TxtFile(Path value) implements File {}
-
     record GitignoreFile(Path value) implements File {}
 
     record M4aFile(Path value) implements File {}

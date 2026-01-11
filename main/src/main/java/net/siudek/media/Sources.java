@@ -105,9 +105,6 @@ public final class Sources {
         if (fileName.endsWith(".amr")) {
             return new Source.AmrFile(path);
         }
-        if (fileName.endsWith(".txt")) {
-            return new Source.TxtFile(path);
-        }
         if (fileName.endsWith(".gitignore")) {
             return new Source.GitignoreFile(path);
         }
