@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 
+import net.siudek.media.Media;
 import net.siudek.media.Source;
 import net.siudek.media.Sources;
 
@@ -22,51 +23,14 @@ public class HelloWorldCommands {
         var rootProject = currentPath.getParent().getParent();
         var rootDir = Sources.of(rootProject);
 
-        switch (rootDir) {
-            case Source.RootDir it -> act(it);
+        var media = switch (rootDir) {
+            case Source.RootDir it -> {
+                yield Media.toMedia(it);
+            }
             default -> throw new IllegalStateException("Unsupported root dir: " + rootDir);
         };
 
         return "The end.";
     }
-
-    void act(Source.RootDir dir) {
-        var sourceDir = dir.source();
-        act(sourceDir);
-    }
-
-    void act(Source.Dir dir) {
-        switch (dir) {
-            case Source.MediaDir md -> act(md);
-            case Source.GitDir gd -> act(gd);
-            case Source.DvdDir dd -> act(dd);
-        };
-    }
-
-    void act(Source.MediaDir dir) {
-        for (var subdir : dir.subdirs()) {
-            System.out.println("Subdir: " + subdir);
-            act(subdir);
-        };
-        for (var file : dir.files()) {
-            System.out.println("File: " + file);
-            act(file);
-        };
-
-    }
-
-    void act(Source.GitDir dir) {
-        // TODO implement
-    }
-
-    void act(Source.DvdDir dir) {
-        // TODO implement
-    }
-
-    void act(Source.File file) {
-        // TODO implement
-    }
-
-
 
 }
