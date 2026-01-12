@@ -27,7 +27,15 @@ class Amr1RenameStrategyTest {
         var result = strategy.tryRename(filePath);
         
         assertThat(result).isTrue();
-        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20211114-155745.outcoming.2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr"));
+        var meta = new MediaCommands.AmrMeta(
+            "20211114",
+            "155745",
+            "outcoming",
+            "Iza Kapała",
+            "+48 503 594 583",
+            filePath
+        );
+        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, meta));
     }
 
     @Test
@@ -42,13 +50,21 @@ class Amr1RenameStrategyTest {
 
     @Test
     @DisplayName("should handle files with various metadata in filename")
-    void shouldHandleMetadataInFilename() {
-        var filePath = Path.of("/path/2022-05-20 10-30-15 (incoming) John Doe (+1 234 567 8900).amr");
+    void shouldHandleMetadataInFilename(@TempDir Path tempDir) {
+        var filePath = tempDir.resolve("2022-05-20 10-30-15 (incoming) John Doe (+1 234 567 8900).amr");
         
         var result = strategy.tryRename(filePath);
         
         assertThat(result).isTrue();
-        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20220520-103015.outcoming.2022-05-20 10-30-15 (incoming) John Doe (+1 234 567 8900).amr"));
+        var meta = new MediaCommands.AmrMeta(
+            "20220520",
+            "103015",
+            "incoming",
+            "John Doe",
+            "+1 234 567 8900",
+            filePath
+        );
+        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, meta));
     }
 
     // @Test

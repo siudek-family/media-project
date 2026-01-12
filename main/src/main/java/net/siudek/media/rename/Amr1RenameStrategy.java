@@ -1,6 +1,7 @@
 package net.siudek.media.rename;
 
 import java.nio.file.Path;
+import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Component;
 
@@ -14,33 +15,50 @@ public class Amr1RenameStrategy implements RenameStrategy {
 
     private final CommandsListener commandsListener;
 
+    // Pattern to match: (phone) Contact Name (+XX XXX XXX XXX) ↗.amr or ↘.amr
+    private static final Pattern AMR_PATTERN = Pattern.compile(
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((.+?)\\) ([↗↘])\\.amr"
+    );
+
     /// name example: 2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr
     /// should be renamed to: 20211114-155745.outcoming.2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr
     /// return true if name can be converted, false otherwise
     @Override
     public boolean tryRename(Path value) {
 
-        // Check if the filename matches the expected pattern: YYYY-MM-DD HH-MM-SS rest.amr
-        if (!value.getFileName().toString().matches("\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} .*")) {
+        var fileName = value.getFileName().toString();
+        var matcher = AMR_PATTERN.matcher(fileName);
+        
+        if (!matcher.matches()) {
             return false;
         }
         
-        // Extract the name from the file path
-        var fileName = value.getFileName().toString();
-        
         // Extract the date and time parts from the filename
-        // Format: YYYY-MM-DD HH-MM-SS
         var datePart = fileName.substring(0, 10).replace("-", ""); // yyyyMMdd
         var timePart = fileName.substring(11, 19).replace("-", ""); // hhmmss
+
+        // Extract contact name and phone from regex groups
+        var contactName = matcher.group(1);
+        var contactPhone = matcher.group(2);
+        var arrow = matcher.group(3);
         
-        // Extract everything after the time (excluding the leading space, keeping the rest of the original part)
-        var restPart = fileName.substring(19);  // This includes " (phone) Iza ... " 
+        // Determine call direction based on arrow
+        var direction = switch(arrow) {
+            case "↘" -> "incoming";
+            case "↗" -> "outcoming";
+            default -> throw new IllegalStateException("Unexpected value: " + arrow);
+        };
+
+        // Create meta from available parts
+        var meta = new MediaCommands.AmrMeta(
+            datePart,
+            timePart,
+            direction,
+            contactName,
+            contactPhone,
+            value);
         
-        // Create the new filename: yyyyMMdd-hhmmss.outcoming.{original-date-time restPart}
-        var newFileName = String.format("%s-%s.outcoming.%s%s", datePart, timePart, fileName.substring(0, 19), restPart);
-        
-        // Emit command to rename the file
-        var cmd = new MediaCommands.RenameMediaItem(value, newFileName);
+        var cmd = new MediaCommands.RenameMediaItem(value, meta);
         commandsListener.on(cmd);
         return true;
     }

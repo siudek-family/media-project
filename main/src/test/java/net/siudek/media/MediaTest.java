@@ -1,5 +1,6 @@
 package net.siudek.media;
 
+import static net.siudek.media.MediaCommands.asFilename;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -46,7 +47,7 @@ class MediaTest {
         // Then
         var command = (MediaCommands.RenameMediaItem) listener.command;
         assertThat(command.from()).isEqualTo(path);
-        assertThat(command.newName()).isEqualTo("20230115-143022.jpg");
+        assertThat(asFilename(command.meta())).isEqualTo("20230115-143022.jpg");
     }
 
     @Test
@@ -59,7 +60,7 @@ class MediaTest {
         
         // Then
         var command = (MediaCommands.RenameMediaItem) listener.command;
-        assertThat(command.newName()).isEqualTo("20240101-235959.backup.jpg");
+        assertThat(asFilename(command.meta())).isEqualTo("20240101-235959.backup.jpg");
     }
 
     @Test

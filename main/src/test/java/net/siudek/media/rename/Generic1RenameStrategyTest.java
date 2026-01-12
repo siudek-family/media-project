@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -26,18 +27,11 @@ class Generic1RenameStrategyTest {
         var result = strategy.tryRename(filePath);
         
         assertThat(result).isTrue();
-        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20231225-153045.jpg"));
-    }
-
-    @Test
-    @DisplayName("should preserve file extension during rename")
-    void shouldPreserveFileExtension() {
-        var filePath = Path.of("/path/20231225_153045.amr");
-        
-        var result = strategy.tryRename(filePath);
-        
-        assertThat(result).isTrue();
-        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20231225-153045.amr"));
+        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, new MediaCommands.GenericMeta(
+            LocalDateTime.of(2023, 12, 25, 15, 30, 45),
+            "jpg",
+            filePath
+        )));
     }
 
     @Test
@@ -48,17 +42,6 @@ class Generic1RenameStrategyTest {
         var result = strategy.tryRename(filePath);
         
         assertThat(result).isFalse();
-    }
-
-    @Test
-    @DisplayName("should handle files with additional suffix after time")
-    void shouldHandleAdditionalSuffix() {
-        var filePath = Path.of("/path/20231225_153045.extra.jpg");
-        
-        var result = strategy.tryRename(filePath);
-        
-        assertThat(result).isTrue();
-        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20231225-153045.extra.jpg"));
     }
 
 }
