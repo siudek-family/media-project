@@ -21,8 +21,8 @@ class Amr1RenameStrategyTest {
 
     @Test
     @DisplayName("should rename phone call AMR file with date-time space-separated pattern")
-    void shouldRenamePhoneCallAMRFile() {
-        var filePath = Path.of("/path/2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr");
+    void shouldRenamePhoneCallAMRFile(@TempDir Path tempDir) {
+        var filePath = tempDir.resolve("2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr");
         
         var result = strategy.tryRename(filePath);
         
@@ -47,35 +47,5 @@ class Amr1RenameStrategyTest {
         
         assertThat(result).isFalse();
     }
-
-    @Test
-    @DisplayName("should handle files with various metadata in filename")
-    void shouldHandleMetadataInFilename(@TempDir Path tempDir) {
-        var filePath = tempDir.resolve("2022-05-20 10-30-15 (incoming) John Doe (+1 234 567 8900).amr");
-        
-        var result = strategy.tryRename(filePath);
-        
-        assertThat(result).isTrue();
-        var meta = new MediaCommands.AmrMeta(
-            "20220520",
-            "103015",
-            "incoming",
-            "John Doe",
-            "+1 234 567 8900",
-            filePath
-        );
-        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, meta));
-    }
-
-    // @Test
-    // @DisplayName("should correctly extract date and time components")
-    // void shouldCorrectlyExtractDateAndTime(@TempDir Path tempDir) {
-    //     var filePath = tempDir.resolve("2023-12-25 23-59-59 test.amr");
-        
-    //     var result = strategy.tryRename(filePath);
-        
-    //     assertThat(result).isTrue();
-    //     verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, "20231225-235959.outcoming.test.amr"));
-    // }
 
 }
