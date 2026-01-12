@@ -30,7 +30,7 @@ class Generic1RenameStrategyTest {
         assertThat(result).isTrue();
         verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, new MediaCommands.GenericMeta(
             LocalDateTime.of(2023, 12, 25, 15, 30, 45),
-            ".jpg",
+            "jpg",
             filePath
         )));
     }

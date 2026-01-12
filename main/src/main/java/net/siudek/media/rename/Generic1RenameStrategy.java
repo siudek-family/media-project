@@ -31,7 +31,7 @@ public class Generic1RenameStrategy implements RenameStrategy {
         
         try {
             var dateTime = LocalDateTime.parse(dateTimePart, FORMATTER);
-            var extension = fileName.substring(15);
+            var extension = fileName.substring(16); // including dot
             var meta = new MediaCommands.GenericMeta(dateTime, extension, value);
             var cmd = new MediaCommands.RenameMediaItem(value, meta);
             commandsListener.on(cmd);
