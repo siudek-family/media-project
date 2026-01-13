@@ -11,37 +11,64 @@ import net.siudek.media.MediaCommands;
 @Component
 public class AmrRenameStrategyPhone implements RenameStrategy {
 
-    /// Example patterns to match:
-    /// 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr 
-    /// 2021-11-14 15-57-45 (phone) John Doe (0048123456789) ↙.amr
-    private static final Pattern AMR_PATTERN = Pattern.compile(
-        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((\\+?\\d+(?:\\s\\d+)*)\\) ([↗↙↕])\\.amr"
+    /// Pattern for phone calls with + prefix: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr
+    private static final Pattern AMR_INTERNATIONAL_PATTERN = Pattern.compile(
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((\\+\\d+(?:\\s\\d+)*)\\) ([↙↗])\\.amr"
     );
 
-    /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr
+    /// Pattern for phone calls without + prefix: 2021-11-14 15-57-45 (phone) John Doe (0048123456789) ↙.amr
+    private static final Pattern AMR_LOCAL_PATTERN = Pattern.compile(
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((\\d+)\\) ([↙↗])\\.amr"
+    );
+
+    /// Pattern for unidentified caller from messenger: 2021-11-14 19-49-35 (phone) 2000 ↙.amr
+    private static final Pattern AMR_UNIDENTIFIED_PATTERN = Pattern.compile(
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (\\d+) ([↙↗])\\.amr"
+    );
+
+    /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr or (0048123456789) ↙.amr or 2000 ↙.amr
     /// Returns Optional containing MediaCommands if pattern matches, empty Optional otherwise
     @Override
     public Optional<MediaCommands> tryRename(Path value) {
 
         var fileName = value.getFileName().toString();
-        var matcher = AMR_PATTERN.matcher(fileName);
         
-        if (!matcher.matches()) {
-            return Optional.empty();
+        // Try international pattern first (with contact name and + phone)
+        var matcher = AMR_INTERNATIONAL_PATTERN.matcher(fileName);
+        String contactName;
+        String contactPhone;
+        String arrow;
+        
+        if (matcher.matches()) {
+            contactName = matcher.group(1);
+            contactPhone = matcher.group(2);
+            arrow = matcher.group(3);
+        } else {
+            // Try local pattern (with contact name and local phone)
+            matcher = AMR_LOCAL_PATTERN.matcher(fileName);
+            if (matcher.matches()) {
+                contactName = matcher.group(1);
+                contactPhone = matcher.group(2);
+                arrow = matcher.group(3);
+            } else {
+                // Try unidentified caller pattern (just ID number)
+                matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
+                if (!matcher.matches()) {
+                    return Optional.empty();
+                }
+                contactName = matcher.group(1);
+                contactPhone = matcher.group(1);  // Use ID as phone for unidentified
+                arrow = matcher.group(2);
+            }
         }
         
         // Parse date and time from the filename
         var dateTime = AmrDateTimeParser.parseDateTime(fileName);
-
-        // Extract contact name and phone from regex groups
-        var contactName = matcher.group(1);
-        var contactPhone = matcher.group(2);
-        var arrow = matcher.group(3);
         
         // Determine call direction based on arrow
         var direction = switch(arrow) {
-            case "↙" -> "incoming";
-            case "↗" -> "outcoming";
+            case "↙" -> MediaCommands.CallDirection.INCOMING;
+            case "↗" -> MediaCommands.CallDirection.OUTGOING;
             default -> throw new IllegalStateException("Unexpected value: " + arrow);
         };
 
