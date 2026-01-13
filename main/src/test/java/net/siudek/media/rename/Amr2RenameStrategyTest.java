@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,8 +29,7 @@ class Amr2RenameStrategyTest {
         
         assertThat(result).isTrue();
         var meta = new MediaCommands.AmrMeta(
-            "20211114",
-            "174905",
+            LocalDateTime.of(2021, 11, 14, 17, 49, 5),
             new MediaCommands.MicRecording("Nagrywanie dyktafonu"),
             filePath
         );

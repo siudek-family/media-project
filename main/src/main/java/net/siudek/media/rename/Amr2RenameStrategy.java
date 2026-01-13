@@ -30,17 +30,15 @@ public class Amr2RenameStrategy implements RenameStrategy {
             return false;
         }
         
-        // Extract the date and time parts from the filename
-        var datePart = fileName.substring(0, 10).replace("-", ""); // yyyyMMdd
-        var timePart = fileName.substring(11, 19).replace("-", ""); // hhmmss
+        // Parse date and time from the filename
+        var dateTime = AmrDateTimeParser.parseDateTime(fileName);
         
         // Extract recording title from regex group
         var title = matcher.group(1);
 
         // Create meta from available parts
         var meta = new MediaCommands.AmrMeta(
-            datePart,
-            timePart,
+            dateTime,
             new MediaCommands.MicRecording(title),
             value);
         

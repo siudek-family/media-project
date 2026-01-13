@@ -33,9 +33,8 @@ public class Amr1RenameStrategy implements RenameStrategy {
             return false;
         }
         
-        // Extract the date and time parts from the filename
-        var datePart = fileName.substring(0, 10).replace("-", ""); // yyyyMMdd
-        var timePart = fileName.substring(11, 19).replace("-", ""); // hhmmss
+        // Parse date and time from the filename
+        var dateTime = AmrDateTimeParser.parseDateTime(fileName);
 
         // Extract contact name and phone from regex groups
         var contactName = matcher.group(1);
@@ -51,8 +50,7 @@ public class Amr1RenameStrategy implements RenameStrategy {
 
         // Create meta from available parts
         var meta = new MediaCommands.AmrMeta(
-            datePart,
-            timePart,
+            dateTime,
             new MediaCommands.PhoneCall(contactName, contactPhone, direction),
             value);
         

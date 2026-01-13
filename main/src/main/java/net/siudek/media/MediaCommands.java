@@ -16,7 +16,7 @@ public sealed interface MediaCommands {
     record PhoneCall(String contactName, String contactPhone, String direction) implements AmrDetails {}
     record MicRecording(String title) implements AmrDetails {}
 
-    record AmrMeta(String datePart, String timePart, AmrDetails amrDetails, Path location) implements Meta {}
+    record AmrMeta(LocalDateTime dateTime, AmrDetails amrDetails, Path location) implements Meta {}
 
     /// Rename media file to the new name without changing its location.
     record RenameMediaItem(Path from, Meta meta) implements MediaCommands {}
@@ -36,17 +36,15 @@ public sealed interface MediaCommands {
                         case "outcoming" -> "↗";
                         default -> throw new IllegalStateException("Unexpected value: " + phoneCall.direction());
                     };
-                    yield String.format("%s-%s (%s) (%s) %s.amr",
-                        amrMeta.datePart(),
-                        amrMeta.timePart(),
+                    yield String.format("%s (%s) (%s) %s.amr",
+                        amrMeta.dateTime().format(formatter),
                         phoneCall.contactName(),
                         phoneCall.contactPhone(),
                         direction);
                 }
                 case MicRecording micRecording -> {
-                    yield String.format("%s-%s (mic) %s.amr",
-                        amrMeta.datePart(),
-                        amrMeta.timePart(),
+                    yield String.format("%s (mic) %s.amr",
+                        amrMeta.dateTime().format(formatter),
                         micRecording.title());
                 }
                 case null -> throw new IllegalArgumentException("AmrDetails cannot be null");
