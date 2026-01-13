@@ -58,6 +58,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "(.+?) \\(facebook\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
     );
 
+    /// Pattern for WhatsApp calls (defaults to OUTGOING): 2020-11-05 21-27-39 (whatsapp) John Doe.amr
+    private static final Pattern AMR_WHATSAPP_PATTERN = Pattern.compile(
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(whatsapp\\) (.+?)\\.amr"
+    );
+
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr or (0048123456789) ↙.amr or 2000 ↙.amr
     /// Returns Optional containing MediaCommands if pattern matches, empty Optional otherwise
     @Override
@@ -129,16 +134,24 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                             arrow = null;  // No arrow means OUTGOING by default
                             dateTime = AmrDateTimeParser.parseDateTime(fileName);
                         } else {
-                        // Try unknown named contact without phone
-                        matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
-                        if (matcher.matches()) {
-                            contactName = matcher.group(1);
-                            contactPhone = matcher.group(1);
-                            arrow = matcher.group(2);
-                            dateTime = AmrDateTimeParser.parseDateTime(fileName);
-                        } else {
-                            // Try unidentified caller pattern (just ID number)
-                            matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
+                            // Try WhatsApp call pattern (defaults to OUTGOING)
+                            matcher = AMR_WHATSAPP_PATTERN.matcher(fileName);
+                            if (matcher.matches()) {
+                                contactName = matcher.group(1);
+                                contactPhone = "WHATSAPP";  // Set phone to WHATSAPP to indicate platform
+                                arrow = null;  // No arrow means OUTGOING by default
+                                dateTime = AmrDateTimeParser.parseDateTime(fileName);
+                            } else {
+                                // Try unknown named contact without phone
+                                matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
+                                if (matcher.matches()) {
+                                    contactName = matcher.group(1);
+                                    contactPhone = matcher.group(1);
+                                    arrow = matcher.group(2);
+                                    dateTime = AmrDateTimeParser.parseDateTime(fileName);
+                                } else {
+                                    // Try unidentified caller pattern (just ID number)
+                                    matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
                             if (!matcher.matches()) {
                                 return Optional.empty();
                             }
@@ -147,6 +160,7 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                             arrow = matcher.group(2);
                             dateTime = AmrDateTimeParser.parseDateTime(fileName);
                         }
+                    }
                     }
                     }
                 }
