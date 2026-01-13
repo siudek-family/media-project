@@ -37,6 +37,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "(.+?) \\((\\d+(?:\\s\\d+)*)\\) ([↙↗]) \\(phone\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
     );
 
+    /// Pattern for local phone without arrow (defaults to OUTGOING): 2022-10-02 15-01-16 (phone) John Doe (0048695785583).amr
+    private static final Pattern AMR_LOCAL_NO_ARROW_PATTERN = Pattern.compile(
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((\\d+(?:\\s\\d+)*)\\)\\.amr"
+    );
+
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr or (0048123456789) ↙.amr or 2000 ↙.amr
     /// Returns Optional containing MediaCommands if pattern matches, empty Optional otherwise
     @Override
@@ -74,30 +79,39 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                     arrow = matcher.group(3);
                     dateTime = AmrDateTimeParser.parseDateTime(fileName);
                 } else {
-                    // Try unknown named contact without phone
-                    matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
+                    // Try local pattern without arrow (defaults to OUTGOING)
+                    matcher = AMR_LOCAL_NO_ARROW_PATTERN.matcher(fileName);
                     if (matcher.matches()) {
                         contactName = matcher.group(1);
-                        contactPhone = matcher.group(1);
-                        arrow = matcher.group(2);
+                        contactPhone = matcher.group(2);
+                        arrow = null;  // No arrow means OUTGOING by default
                         dateTime = AmrDateTimeParser.parseDateTime(fileName);
                     } else {
-                        // Try unidentified caller pattern (just ID number)
-                        matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
-                        if (!matcher.matches()) {
-                            return Optional.empty();
+                        // Try unknown named contact without phone
+                        matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
+                        if (matcher.matches()) {
+                            contactName = matcher.group(1);
+                            contactPhone = matcher.group(1);
+                            arrow = matcher.group(2);
+                            dateTime = AmrDateTimeParser.parseDateTime(fileName);
+                        } else {
+                            // Try unidentified caller pattern (just ID number)
+                            matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
+                            if (!matcher.matches()) {
+                                return Optional.empty();
+                            }
+                            contactName = matcher.group(1);
+                            contactPhone = matcher.group(1);  // Use ID as phone for unidentified
+                            arrow = matcher.group(2);
+                            dateTime = AmrDateTimeParser.parseDateTime(fileName);
                         }
-                        contactName = matcher.group(1);
-                        contactPhone = matcher.group(1);  // Use ID as phone for unidentified
-                        arrow = matcher.group(2);
-                        dateTime = AmrDateTimeParser.parseDateTime(fileName);
                     }
                 }
             }
         }
         
-        // Determine call direction based on arrow
-        var direction = switch(arrow) {
+        // Determine call direction based on arrow (null means OUTGOING by default)
+        var direction = arrow == null ? MediaCommands.CallDirection.OUTGOING : switch(arrow) {
             case "↙" -> MediaCommands.CallDirection.INCOMING;
             case "↗" -> MediaCommands.CallDirection.OUTGOING;
             default -> throw new IllegalStateException("Unexpected value: " + arrow);

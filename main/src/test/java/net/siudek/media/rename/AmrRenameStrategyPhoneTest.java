@@ -28,6 +28,7 @@ class AmrRenameStrategyPhoneTest {
         2021-11-19 18-02-07 (phone) Nieznany kontakt ↙.amr | Nieznany kontakt | Nieznany kontakt | INCOMING
         2021-11-14 19-49-35 (phone) 2000 ↙.amr | 2000 | 2000 | INCOMING
         John Doe (663 444 136) ↗ (phone) 2022-06-18 14-14-47.amr | John Doe | 663 444 136 | OUTGOING
+        2022-10-02 15-01-16 (phone) John Doe (0048695785583).amr | John Doe | 0048695785583 | OUTGOING
         """)
     @DisplayName("should rename phone call AMR file with valid patterns")
     void shouldRenamePhoneCallAMRFile(String fileName, String expectedContactName, String expectedPhone, CallDirection expectedDirection, @TempDir Path tempDir) {
