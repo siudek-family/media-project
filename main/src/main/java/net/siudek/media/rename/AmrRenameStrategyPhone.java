@@ -1,6 +1,7 @@
 package net.siudek.media.rename;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -31,6 +32,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) ([↙↗])\\.amr"
     );
 
+    /// Pattern for reversed format with date at end: John Doe (663 444 136) ↗ (phone) 2022-06-18 14-14-47.amr
+    private static final Pattern AMR_REVERSED_LOCAL_PATTERN = Pattern.compile(
+        "(.+?) \\((\\d+(?:\\s\\d+)*)\\) ([↙↗]) \\(phone\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
+    );
+
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr or (0048123456789) ↙.amr or 2000 ↙.amr
     /// Returns Optional containing MediaCommands if pattern matches, empty Optional otherwise
     @Override
@@ -38,45 +44,57 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
 
         var fileName = value.getFileName().toString();
         
-        // Try international pattern first (with contact name and + phone)
-        var matcher = AMR_INTERNATIONAL_PATTERN.matcher(fileName);
+        // Try reversed format first (date at end)
+        var matcher = AMR_REVERSED_LOCAL_PATTERN.matcher(fileName);
         String contactName;
         String contactPhone;
         String arrow;
+        LocalDateTime dateTime;
         
         if (matcher.matches()) {
             contactName = matcher.group(1);
             contactPhone = matcher.group(2);
             arrow = matcher.group(3);
+            dateTime = AmrDateTimeParser.parseDateTime(matcher.group(4));
         } else {
-            // Try local pattern (with contact name and local phone)
-            matcher = AMR_LOCAL_PATTERN.matcher(fileName);
+            // Try international pattern (with contact name and + phone)
+            matcher = AMR_INTERNATIONAL_PATTERN.matcher(fileName);
+        
             if (matcher.matches()) {
                 contactName = matcher.group(1);
                 contactPhone = matcher.group(2);
                 arrow = matcher.group(3);
+                dateTime = AmrDateTimeParser.parseDateTime(fileName);
             } else {
-                // Try unknown named contact without phone
-                matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
+                // Try local pattern (with contact name and local phone)
+                matcher = AMR_LOCAL_PATTERN.matcher(fileName);
                 if (matcher.matches()) {
                     contactName = matcher.group(1);
-                    contactPhone = matcher.group(1);
-                    arrow = matcher.group(2);
+                    contactPhone = matcher.group(2);
+                    arrow = matcher.group(3);
+                    dateTime = AmrDateTimeParser.parseDateTime(fileName);
                 } else {
-                    // Try unidentified caller pattern (just ID number)
-                    matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
-                    if (!matcher.matches()) {
-                        return Optional.empty();
+                    // Try unknown named contact without phone
+                    matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
+                    if (matcher.matches()) {
+                        contactName = matcher.group(1);
+                        contactPhone = matcher.group(1);
+                        arrow = matcher.group(2);
+                        dateTime = AmrDateTimeParser.parseDateTime(fileName);
+                    } else {
+                        // Try unidentified caller pattern (just ID number)
+                        matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
+                        if (!matcher.matches()) {
+                            return Optional.empty();
+                        }
+                        contactName = matcher.group(1);
+                        contactPhone = matcher.group(1);  // Use ID as phone for unidentified
+                        arrow = matcher.group(2);
+                        dateTime = AmrDateTimeParser.parseDateTime(fileName);
                     }
-                    contactName = matcher.group(1);
-                    contactPhone = matcher.group(1);  // Use ID as phone for unidentified
-                    arrow = matcher.group(2);
                 }
             }
         }
-        
-        // Parse date and time from the filename
-        var dateTime = AmrDateTimeParser.parseDateTime(fileName);
         
         // Determine call direction based on arrow
         var direction = switch(arrow) {
