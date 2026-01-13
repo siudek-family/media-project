@@ -37,9 +37,9 @@ public class Amr2RenameStrategy implements RenameStrategy {
         var title = matcher.group(1);
 
         // Create meta from available parts
-        var meta = new MediaCommands.AmrMeta(
+        var meta = new MediaCommands.AmrMicRecordingMeta(
             dateTime,
-            new MediaCommands.MicRecording(title),
+            title,
             value);
         
         var cmd = new MediaCommands.RenameMediaItem(value, meta);

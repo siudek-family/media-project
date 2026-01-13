@@ -12,11 +12,9 @@ public sealed interface MediaCommands {
 
     record GenericMeta(LocalDateTime date, String extension, Path location) implements Meta {}
     
-    sealed interface AmrDetails {}
-    record PhoneCall(String contactName, String contactPhone, String direction) implements AmrDetails {}
-    record MicRecording(String title) implements AmrDetails {}
+    record AmrPhoneCallMeta(LocalDateTime dateTime, String contactName, String contactPhone, String direction, Path location) implements Meta {}
 
-    record AmrMeta(LocalDateTime dateTime, AmrDetails amrDetails, Path location) implements Meta {}
+    record AmrMicRecordingMeta(LocalDateTime dateTime, String title, Path location) implements Meta {}
 
     /// Rename media file to the new name without changing its location.
     record RenameMediaItem(Path from, Meta meta) implements MediaCommands {}
@@ -29,26 +27,23 @@ public sealed interface MediaCommands {
                 var date = genericMeta.date();
                 yield date.format(formatter) + "." + genericMeta.extension();
             }
-            case AmrMeta amrMeta -> switch (amrMeta.amrDetails()) {
-                case PhoneCall phoneCall -> {
-                    var direction = switch (phoneCall.direction()) {
-                        case "incoming" -> "↘";
-                        case "outcoming" -> "↗";
-                        default -> throw new IllegalStateException("Unexpected value: " + phoneCall.direction());
-                    };
-                    yield String.format("%s (%s) (%s) %s.amr",
-                        amrMeta.dateTime().format(formatter),
-                        phoneCall.contactName(),
-                        phoneCall.contactPhone(),
-                        direction);
-                }
-                case MicRecording micRecording -> {
-                    yield String.format("%s (mic) %s.amr",
-                        amrMeta.dateTime().format(formatter),
-                        micRecording.title());
-                }
-                case null -> throw new IllegalArgumentException("AmrDetails cannot be null");
-            };
+            case AmrPhoneCallMeta phoneCallMeta -> {
+                var direction = switch (phoneCallMeta.direction()) {
+                    case "incoming" -> "↘";
+                    case "outcoming" -> "↗";
+                    default -> throw new IllegalStateException("Unexpected value: " + phoneCallMeta.direction());
+                };
+                yield String.format("%s (%s) (%s) %s.amr",
+                    phoneCallMeta.dateTime().format(formatter),
+                    phoneCallMeta.contactName(),
+                    phoneCallMeta.contactPhone(),
+                    direction);
+            }
+            case AmrMicRecordingMeta micRecordingMeta -> {
+                yield String.format("%s (mic) %s.amr",
+                    micRecordingMeta.dateTime().format(formatter),
+                    micRecordingMeta.title());
+            }
             case null -> throw new IllegalArgumentException("Meta cannot be null");
         };
     }

@@ -28,9 +28,9 @@ class Amr2RenameStrategyTest {
         var result = strategy.tryRename(filePath);
         
         assertThat(result).isTrue();
-        var meta = new MediaCommands.AmrMeta(
+        var meta = new MediaCommands.AmrMicRecordingMeta(
             LocalDateTime.of(2021, 11, 14, 17, 49, 5),
-            new MediaCommands.MicRecording("Nagrywanie dyktafonu"),
+            "Nagrywanie dyktafonu",
             filePath
         );
         verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, meta));

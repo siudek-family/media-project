@@ -28,9 +28,11 @@ class Amr1RenameStrategyTest {
         var result = strategy.tryRename(filePath);
         
         assertThat(result).isTrue();
-        var meta = new MediaCommands.AmrMeta(
+        var meta = new MediaCommands.AmrPhoneCallMeta(
             LocalDateTime.of(2021, 11, 14, 15, 57, 45),
-            new MediaCommands.PhoneCall("Jan Kowalski", "+48 503 594 583", "outcoming"),
+            "Jan Kowalski",
+            "+48 503 594 583",
+            "outcoming",
             filePath
         );
         verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, meta));

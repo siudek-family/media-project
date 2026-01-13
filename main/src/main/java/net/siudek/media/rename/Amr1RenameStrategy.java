@@ -49,9 +49,11 @@ public class Amr1RenameStrategy implements RenameStrategy {
         };
 
         // Create meta from available parts
-        var meta = new MediaCommands.AmrMeta(
+        var meta = new MediaCommands.AmrPhoneCallMeta(
             dateTime,
-            new MediaCommands.PhoneCall(contactName, contactPhone, direction),
+            contactName,
+            contactPhone,
+            direction,
             value);
         
         var cmd = new MediaCommands.RenameMediaItem(value, meta);
