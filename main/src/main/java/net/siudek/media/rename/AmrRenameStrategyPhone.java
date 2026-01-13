@@ -12,10 +12,11 @@ import net.siudek.media.MediaCommands;
 public class AmrRenameStrategyPhone implements RenameStrategy {
 
     /// Example patterns to match:
-    /// (phone) John Doe (+XX XXX XXX XXX) ↗.amr 
-    /// (phone) John Doe (0048123456789) ↘.amr
+    /// 2021-11-14 15-57-45 (phone) John Doe (+XX XXX XXX XXX) ↗.amr 
+    /// 2021-11-14 15-57-45 (phone) John Doe (0048123456789) ↘.amr
+    /// 2021-11-14 18-46-09 (phone) Maria Siudek (0048604066737) ↕.amr
     private static final Pattern AMR_PATTERN = Pattern.compile(
-        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((\\+?\\d+(?:\\s\\d+)*)\\) ([↗↘])\\.amr"
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((\\+?\\d+(?:\\s\\d+)*)\\) ([↗↙↕])\\.amr"
     );
 
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr
@@ -40,7 +41,7 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         
         // Determine call direction based on arrow
         var direction = switch(arrow) {
-            case "↘" -> "incoming";
+            case "↙" -> "incoming";
             case "↗" -> "outcoming";
             default -> throw new IllegalStateException("Unexpected value: " + arrow);
         };

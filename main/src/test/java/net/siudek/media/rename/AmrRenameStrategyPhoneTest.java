@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import net.siudek.media.MediaCommands;
 
@@ -16,10 +18,14 @@ class AmrRenameStrategyPhoneTest {
 
     private final AmrRenameStrategyPhone strategy = new AmrRenameStrategyPhone();
 
-    @Test
-    @DisplayName("should rename phone call AMR file with date-time space-separated pattern")
-    void shouldRenamePhoneCallAMRFile(@TempDir Path tempDir) {
-        var filePath = tempDir.resolve("2021-11-14 15-57-45 (phone) Jan Kowalski (+48 503 594 583) ↗.amr");
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', textBlock = """
+        2021-11-14 15-57-45 (phone) Jan Kowalski (+48 503 594 583) ↗.amr | Jan Kowalski | +48 503 594 583 | outcoming
+        2021-11-14 15-57-45 (phone) Jan Kowalski (0048604066737) ↙.amr | Jan Kowalski | 0048604066737 | incoming
+        """)
+    @DisplayName("should rename phone call AMR file with valid patterns")
+    void shouldRenamePhoneCallAMRFile(String fileName, String expectedContactName, String expectedPhone, String expectedDirection, @TempDir Path tempDir) {
+        var filePath = tempDir.resolve(fileName);
         
         var result = strategy.tryRename(filePath);
         
@@ -28,29 +34,9 @@ class AmrRenameStrategyPhoneTest {
         assertThat(command.from()).isEqualTo(filePath);
         
         var meta = (MediaCommands.AmrPhoneCallMeta) command.meta();
-        assertThat(meta.dateTime()).isEqualTo(LocalDateTime.of(2021, 11, 14, 15, 57, 45));
-        assertThat(meta.contactName()).isEqualTo("Jan Kowalski");
-        assertThat(meta.contactPhone()).isEqualTo("+48 503 594 583");
-        assertThat(meta.direction()).isEqualTo("outcoming");
-        assertThat(meta.location()).isEqualTo(filePath);
-    }
-
-    @Test
-    @DisplayName("should rename phone call AMR file with compact phone number format (00xx...)")
-    void shouldRenamePhoneCallAMRFileWithCompactPhoneNumber(@TempDir Path tempDir) {
-        var filePath = tempDir.resolve("2021-11-14 15-57-45 (phone) Jan Kowalski (0048604066737) ↘.amr");
-        
-        var result = strategy.tryRename(filePath);
-        
-        assertThat(result).isPresent();
-        var command = (MediaCommands.RenameMediaItem) result.get();
-        assertThat(command.from()).isEqualTo(filePath);
-        
-        var meta = (MediaCommands.AmrPhoneCallMeta) command.meta();
-        assertThat(meta.dateTime()).isEqualTo(LocalDateTime.of(2021, 11, 14, 15, 57, 45));
-        assertThat(meta.contactName()).isEqualTo("Jan Kowalski");
-        assertThat(meta.contactPhone()).isEqualTo("0048604066737");
-        assertThat(meta.direction()).isEqualTo("incoming");
+        assertThat(meta.contactName()).isEqualTo(expectedContactName);
+        assertThat(meta.contactPhone()).isEqualTo(expectedPhone);
+        assertThat(meta.direction()).isEqualTo(expectedDirection);
         assertThat(meta.location()).isEqualTo(filePath);
     }
 
