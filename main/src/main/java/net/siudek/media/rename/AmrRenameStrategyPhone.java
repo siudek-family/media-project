@@ -1,37 +1,33 @@
 package net.siudek.media.rename;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
-import net.siudek.media.CommandsListener;
 import net.siudek.media.MediaCommands;
 
-@RequiredArgsConstructor
 @Component
-public class Amr1RenameStrategy implements RenameStrategy {
-
-    private final CommandsListener commandsListener;
+public class AmrRenameStrategyPhone implements RenameStrategy {
 
     /// Example patterns to match:
     /// (phone) John Doe (+XX XXX XXX XXX) ↗.amr 
-    /// (phone) John Doe (0048604066737) ↘.amr
+    /// (phone) John Doe (0048123456789) ↘.amr
     private static final Pattern AMR_PATTERN = Pattern.compile(
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((\\+?\\d+(?:\\s\\d+)*)\\) ([↗↘])\\.amr"
     );
 
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr
-    /// return true if name can be converted, false otherwise
+    /// Returns Optional containing MediaCommands if pattern matches, empty Optional otherwise
     @Override
-    public boolean tryRename(Path value) {
+    public Optional<MediaCommands> tryRename(Path value) {
 
         var fileName = value.getFileName().toString();
         var matcher = AMR_PATTERN.matcher(fileName);
         
         if (!matcher.matches()) {
-            return false;
+            return Optional.empty();
         }
         
         // Parse date and time from the filename
@@ -58,8 +54,7 @@ public class Amr1RenameStrategy implements RenameStrategy {
             value);
         
         var cmd = new MediaCommands.RenameMediaItem(value, meta);
-        commandsListener.on(cmd);
-        return true;
+        return Optional.of(cmd);
     }
 
 }

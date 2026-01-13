@@ -4,27 +4,23 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
-import net.siudek.media.CommandsListener;
 import net.siudek.media.MediaCommands;
 
-@RequiredArgsConstructor
 @Component
 public class Generic1RenameStrategy implements RenameStrategy {
-
-    private final CommandsListener commandsListener;
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     /// rename yyyyMMdd_hhmmss.* to yyyyMMdd-hhmmss.*
     @Override
-    public boolean tryRename(Path value) {
+    public Optional<MediaCommands> tryRename(Path value) {
         var fileName = value.getFileName().toString();
         
         if (!fileName.matches("\\d{8}_\\d{6}.*")) {
-            return false;
+            return Optional.empty();
         }
 
         var dateTimePart = fileName.substring(0, 8) + fileName.substring(9, 15);
@@ -34,10 +30,9 @@ public class Generic1RenameStrategy implements RenameStrategy {
             var extension = fileName.substring(16); // including dot
             var meta = new MediaCommands.GenericMeta(dateTime, extension, value);
             var cmd = new MediaCommands.RenameMediaItem(value, meta);
-            commandsListener.on(cmd);
-            return true;
+            return Optional.of(cmd);
         } catch (DateTimeParseException e) {
-            return false;
+            return Optional.empty();
         }
     }
 

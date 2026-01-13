@@ -17,6 +17,7 @@ import net.siudek.media.rename.RenameStrategy;
 public class Media {
     
     private final List<RenameStrategy> renameStrategies;
+    private final CommandsListener commandsListener;
 
     public Set<MediaItem> toMedia(Source.RootDir rootDir) {
         var result = new HashSet<MediaItem>();
@@ -135,11 +136,17 @@ public class Media {
     /// If name is different, we should try to define conversion method of its current name to proper one.
     public void verifyNameConvention(Path value) {
 
-        var validStrategies = renameStrategies.stream().filter(rs -> rs.tryRename(value)).toList();
-        if (validStrategies.size() > 1) {
+        var matchedCommands = renameStrategies.stream()
+            .map(rs -> rs.tryRename(value))
+            .filter(java.util.Optional::isPresent)
+            .map(java.util.Optional::get)
+            .toList();
+        
+        if (matchedCommands.size() > 1) {
             throw new IllegalStateException("Multiple rename strategies matched for file: " + value);
         }
-        if (validStrategies.size() == 1) {
+        if (matchedCommands.size() == 1) {
+            commandsListener.on(matchedCommands.get(0));
             return;
         }
 
