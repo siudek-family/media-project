@@ -12,6 +12,8 @@ public sealed interface MediaCommands {
 
     record GenericMeta(LocalDateTime date, String extension, Path location) implements Meta {}
     
+    /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr
+    /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) .amr
     record AmrPhoneCallMeta(LocalDateTime dateTime, String contactName, String contactPhone, String direction, Path location) implements Meta {}
 
     record AmrMicRecordingMeta(LocalDateTime dateTime, String title, Path location) implements Meta {}

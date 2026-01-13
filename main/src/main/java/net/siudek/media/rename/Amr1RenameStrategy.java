@@ -20,8 +20,7 @@ public class Amr1RenameStrategy implements RenameStrategy {
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((.+?)\\) ([↗↘])\\.amr"
     );
 
-    /// name example: 2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr
-    /// should be renamed to: 20211114-155745.outcoming.2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr
+    /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr
     /// return true if name can be converted, false otherwise
     @Override
     public boolean tryRename(Path value) {
