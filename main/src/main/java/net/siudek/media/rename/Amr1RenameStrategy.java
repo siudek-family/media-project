@@ -15,9 +15,11 @@ public class Amr1RenameStrategy implements RenameStrategy {
 
     private final CommandsListener commandsListener;
 
-    // Pattern to match: (phone) Contact Name (+XX XXX XXX XXX) ↗.amr or ↘.amr
+    /// Example patterns to match:
+    /// (phone) John Doe (+XX XXX XXX XXX) ↗.amr 
+    /// (phone) John Doe (0048604066737) ↘.amr
     private static final Pattern AMR_PATTERN = Pattern.compile(
-        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((.+?)\\) ([↗↘])\\.amr"
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((\\+?\\d+(?:\\s\\d+)*)\\) ([↗↘])\\.amr"
     );
 
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr

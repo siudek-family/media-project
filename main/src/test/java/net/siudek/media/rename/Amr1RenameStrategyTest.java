@@ -39,6 +39,24 @@ class Amr1RenameStrategyTest {
     }
 
     @Test
+    @DisplayName("should rename phone call AMR file with compact phone number format (00xx...)")
+    void shouldRenamePhoneCallAMRFileWithCompactPhoneNumber(@TempDir Path tempDir) {
+        var filePath = tempDir.resolve("2021-11-14 15-57-45 (phone) Jan Kowalski (0048604066737) ↘.amr");
+        
+        var result = strategy.tryRename(filePath);
+        
+        assertThat(result).isTrue();
+        var meta = new MediaCommands.AmrPhoneCallMeta(
+            LocalDateTime.of(2021, 11, 14, 15, 57, 45),
+            "Jan Kowalski",
+            "0048604066737",
+            "incoming",
+            filePath
+        );
+        verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, meta));
+    }
+
+    @Test
     @DisplayName("should return false for non-matching file pattern")
     void shouldReturnFalseForNonMatchingPattern() {
         var filePath = Path.of("/path/2021-11-14_15-57-45_some_file.amr");
