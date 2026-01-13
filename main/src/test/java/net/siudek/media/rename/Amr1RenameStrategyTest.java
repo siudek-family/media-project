@@ -22,7 +22,7 @@ class Amr1RenameStrategyTest {
     @Test
     @DisplayName("should rename phone call AMR file with date-time space-separated pattern")
     void shouldRenamePhoneCallAMRFile(@TempDir Path tempDir) {
-        var filePath = tempDir.resolve("2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr");
+        var filePath = tempDir.resolve("2021-11-14 15-57-45 (phone) Jan Kowalski (+48 503 594 583) ↗.amr");
         
         var result = strategy.tryRename(filePath);
         
@@ -30,9 +30,7 @@ class Amr1RenameStrategyTest {
         var meta = new MediaCommands.AmrMeta(
             "20211114",
             "155745",
-            "outcoming",
-            "Iza Kapała",
-            "+48 503 594 583",
+            new MediaCommands.PhoneCall("Jan Kowalski", "+48 503 594 583", "outcoming"),
             filePath
         );
         verify(commandsListener).on(new MediaCommands.RenameMediaItem(filePath, meta));

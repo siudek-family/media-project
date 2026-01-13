@@ -11,18 +11,15 @@ import net.siudek.media.MediaCommands;
 
 @RequiredArgsConstructor
 @Component
-public class Amr1RenameStrategy implements RenameStrategy {
+/// Example to match: 2021-11-14 17-49-05 (mic) Nagrywanie dyktafonu.amr
+public class Amr2RenameStrategy implements RenameStrategy {
 
     private final CommandsListener commandsListener;
 
-    // Pattern to match: (phone) Contact Name (+XX XXX XXX XXX) ↗.amr or ↘.amr
     private static final Pattern AMR_PATTERN = Pattern.compile(
-        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((.+?)\\) ([↗↘])\\.amr"
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(mic\\) (.+?)\\.amr"
     );
 
-    /// name example: 2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr
-    /// should be renamed to: 20211114-155745.outcoming.2021-11-14 15-57-45 (phone) Iza Kapała (+48 503 594 583) ↗.amr
-    /// return true if name can be converted, false otherwise
     @Override
     public boolean tryRename(Path value) {
 
@@ -36,24 +33,15 @@ public class Amr1RenameStrategy implements RenameStrategy {
         // Extract the date and time parts from the filename
         var datePart = fileName.substring(0, 10).replace("-", ""); // yyyyMMdd
         var timePart = fileName.substring(11, 19).replace("-", ""); // hhmmss
-
-        // Extract contact name and phone from regex groups
-        var contactName = matcher.group(1);
-        var contactPhone = matcher.group(2);
-        var arrow = matcher.group(3);
         
-        // Determine call direction based on arrow
-        var direction = switch(arrow) {
-            case "↘" -> "incoming";
-            case "↗" -> "outcoming";
-            default -> throw new IllegalStateException("Unexpected value: " + arrow);
-        };
+        // Extract recording title from regex group
+        var title = matcher.group(1);
 
         // Create meta from available parts
         var meta = new MediaCommands.AmrMeta(
             datePart,
             timePart,
-            new MediaCommands.PhoneCall(contactName, contactPhone, direction),
+            new MediaCommands.MicRecording(title),
             value);
         
         var cmd = new MediaCommands.RenameMediaItem(value, meta);

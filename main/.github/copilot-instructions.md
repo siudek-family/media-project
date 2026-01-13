@@ -56,16 +56,19 @@ sealed interface Source {
 
 ### 2. **Strategy Pattern for Rename Operations**
 
-Rename strategies implement `RenameStrategy` interface (see `Generic1RenameStrategy.java`, `Amr1RenameStrategy.java`):
+Rename strategies implement `RenameStrategy` interface (see `Generic1RenameStrategy.java`, `Amr1RenameStrategy.java`, `Amr2RenameStrategy.java`):
 - Each strategy validates file name patterns via regex
 - On match, emits `MediaCommands.RenameMediaItem` command via `CommandsListener`
 - Strategies are autowired into container and iterated during processing
+- `Media.verifyNameConvention()` iterates all strategies and ensures exactly one matches per file
 
 **Adding a new rename strategy**:
 1. Create class implementing `RenameStrategy`
 2. Inject `CommandsListener` (required to emit commands)
 3. Annotate with `@Component` for auto-discovery
 4. Implement pattern matching logic in `tryRename(Path)`
+5. Extract regex groups and construct appropriate `Meta` record type
+6. Emit `RenameMediaItem` command with extracted metadata
 
 ### 3. **Command Emission over Direct Side Effects**
 
@@ -113,15 +116,19 @@ src/main/java/net/siudek/media/
 ├── Source.java                # Sealed hierarchy of media file/dir types
 ├── Sources.java               # Factory or utilities for Source objects
 ├── Program.java               # Spring Boot entry point
+├── shell/
+│   └── HelloWorldCommands.java  # Spring Shell CLI commands (@ShellMethod)
 └── rename/
-    ├── RenameStrategy.java    # Strategy interface
+    ├── RenameStrategy.java          # Strategy interface
     ├── Generic1RenameStrategy.java  # Converts yyyyMMdd_hhmmss → yyyyMMdd-hhmmss
-    └── Amr1RenameStrategy.java      # AMR file-specific naming
+    ├── Amr1RenameStrategy.java      # AMR phone call files
+    └── Amr2RenameStrategy.java      # AMR microphone recordings
 ```
 
-## Important Integration Points
-
-- **Spring Batch**: Configured in pom.xml but integration not visible in core Java files; used for bulk processing workflows
+## Important Integration PointsHelloWorldCommands.java` (shell commands annotated with `@ShellMethod`)
+- **Lombok**: Generates constructors (`@RequiredArgsConstructor`), logging (`@Slf4j`), getters/setters; Maven compiler plugin must include annotation processor path
+- **Java File I/O**: Uses `java.nio.file.Path` throughout (not String); enables filesystem abstraction
+- **Application Properties**: Configure with `spring.shell.interactive.enabled=true` for interactive mode or `false` for batch/test modek processing workflows
 - **Spring Shell**: Provides CLI interface via `MediaCommands.java` (shell commands for user interaction)
 - **Lombok**: Generates constructors (`@RequiredArgsConstructor`), logging (`@Slf4j`), getters/setters; Maven compiler plugin must include annotation processor path
 - **Java File I/O**: Uses `java.nio.file.Path` throughout (not String); enables filesystem abstraction

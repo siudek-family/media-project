@@ -12,7 +12,11 @@ public sealed interface MediaCommands {
 
     record GenericMeta(LocalDateTime date, String extension, Path location) implements Meta {}
     
-    record AmrMeta(String datePart, String timePart, String contactName, String contancPhone, String direction, Path location) implements Meta {}
+    sealed interface AmrDetails {}
+    record PhoneCall(String contactName, String contactPhone, String direction) implements AmrDetails {}
+    record MicRecording(String title) implements AmrDetails {}
+
+    record AmrMeta(String datePart, String timePart, AmrDetails amrDetails, Path location) implements Meta {}
 
     /// Rename media file to the new name without changing its location.
     record RenameMediaItem(Path from, Meta meta) implements MediaCommands {}
@@ -25,10 +29,28 @@ public sealed interface MediaCommands {
                 var date = genericMeta.date();
                 yield date.format(formatter) + "." + genericMeta.extension();
             }
-            case AmrMeta amrMeta -> String.format("%s.%s.%s.amr",
-                    amrMeta.direction().toLowerCase(),
-                    amrMeta.contactName().replaceAll(" ", "_"),
-                    amrMeta.contancPhone().replaceAll("[ +()-]", ""));
+            case AmrMeta amrMeta -> switch (amrMeta.amrDetails()) {
+                case PhoneCall phoneCall -> {
+                    var direction = switch (phoneCall.direction()) {
+                        case "incoming" -> "↘";
+                        case "outcoming" -> "↗";
+                        default -> throw new IllegalStateException("Unexpected value: " + phoneCall.direction());
+                    };
+                    yield String.format("%s-%s (%s) (%s) %s.amr",
+                        amrMeta.datePart(),
+                        amrMeta.timePart(),
+                        phoneCall.contactName(),
+                        phoneCall.contactPhone(),
+                        direction);
+                }
+                case MicRecording micRecording -> {
+                    yield String.format("%s-%s (mic) %s.amr",
+                        amrMeta.datePart(),
+                        amrMeta.timePart(),
+                        micRecording.title());
+                }
+                case null -> throw new IllegalArgumentException("AmrDetails cannot be null");
+            };
             case null -> throw new IllegalArgumentException("Meta cannot be null");
         };
     }
