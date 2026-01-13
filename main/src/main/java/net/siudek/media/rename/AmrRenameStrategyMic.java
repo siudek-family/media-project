@@ -10,7 +10,7 @@ import net.siudek.media.MediaCommands;
 
 @Component
 /// Example to match: 2021-11-14 17-49-05 (mic) Nagrywanie dyktafonu.amr
-public class Amr2RenameStrategy implements RenameStrategy {
+public class AmrRenameStrategyMic implements RenameStrategy {
 
     private static final Pattern AMR_PATTERN = Pattern.compile(
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(mic\\) (.+?)\\.amr"

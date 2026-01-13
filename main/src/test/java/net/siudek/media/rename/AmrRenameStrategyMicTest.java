@@ -11,10 +11,10 @@ import org.junit.jupiter.api.DisplayName;
 
 import net.siudek.media.MediaCommands;
 
-@DisplayName("Amr2RenameStrategy")
-class Amr2RenameStrategyTest {
+@DisplayName("AmrRenameStrategyMic")
+class AmrRenameStrategyMicTest {
 
-    private final Amr2RenameStrategy strategy = new Amr2RenameStrategy();
+    private final AmrRenameStrategyMic strategy = new AmrRenameStrategyMic();
 
     @Test
     @DisplayName("should rename microphone recording AMR file with date-time (mic) pattern")
