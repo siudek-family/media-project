@@ -21,19 +21,19 @@ class AmrRenameStrategyPhoneTest {
 
     @ParameterizedTest
     @CsvSource(delimiter = '|', textBlock = """
-        2021-11-14 15-57-45 (phone) Jan Kowalski (+48 503 594 583) ↗.amr | Jan Kowalski | +48 503 594 583 | OUTGOING
-        2021-11-14 15-57-45 (phone) Jan Kowalski (0048604066737) ↙.amr | Jan Kowalski | 0048604066737 | INCOMING
-        2021-11-15 18-12-28 (phone) Janek (667 044 821) ↙.amr | Janek | 667 044 821 | INCOMING
-        2021-11-19 14-44-06 (phone) 42 237 22 28 ↙.amr | 42 237 22 28 | 42 237 22 28 | INCOMING
-        2021-11-19 18-02-07 (phone) Nieznany kontakt ↙.amr | Nieznany kontakt | Nieznany kontakt | INCOMING
-        2021-11-14 19-49-35 (phone) 2000 ↙.amr | 2000 | 2000 | INCOMING
-        John Doe (663 444 136) ↗ (phone) 2022-06-18 14-14-47.amr | John Doe | 663 444 136 | OUTGOING
-        2022-10-02 15-01-16 (phone) John Doe (0048695785583).amr | John Doe | 0048695785583 | OUTGOING
-        2022-11-08 13-04-02 (facebook) John Doe.amr | John Doe | FACEBOOK | OUTGOING
-        +48 18 202 00 00 ↗ (phone) 2023-05-27 14-30-22.amr | +48 18 202 00 00 | +48 18 202 00 00 | OUTGOING
+        2021-11-14 15-57-45 (phone) Jan Kowalski (+48 503 594 583) ↗.amr | Jan Kowalski | +48 503 594 583 | OUTGOING | 2021-11-14T15:57:45
+        2021-11-14 15-57-45 (phone) Jan Kowalski (0048604066737) ↙.amr | Jan Kowalski | 0048604066737 | INCOMING | 2021-11-14T15:57:45
+        2021-11-15 18-12-28 (phone) Janek (667 044 821) ↙.amr | Janek | 667 044 821 | INCOMING | 2021-11-15T18:12:28
+        2021-11-19 14-44-06 (phone) 42 237 22 28 ↙.amr | 42 237 22 28 | 42 237 22 28 | INCOMING | 2021-11-19T14:44:06
+        2021-11-19 18-02-07 (phone) Nieznany kontakt ↙.amr | Nieznany kontakt | Nieznany kontakt | INCOMING | 2021-11-19T18:02:07
+        2021-11-14 19-49-35 (phone) 2000 ↙.amr | 2000 | 2000 | INCOMING | 2021-11-14T19:49:35
+        John Doe (663 444 136) ↗ (phone) 2022-06-18 14-14-47.amr | John Doe | 663 444 136 | OUTGOING | 2022-06-18T14:14:47
+        2022-10-02 15-01-16 (phone) John Doe (0048695785583).amr | John Doe | 0048695785583 | OUTGOING | 2022-10-02T15:01:16
+        2022-11-08 13-04-02 (facebook) John Doe.amr | John Doe | FACEBOOK | OUTGOING | 2022-11-08T13:04:02
+        +48 18 202 00 00 ↗ (phone) 2023-05-27 14-30-22.amr | +48 18 202 00 00 | +48 18 202 00 00 | OUTGOING | 2023-05-27T14:30:22
         """)
     @DisplayName("should rename phone call AMR file with valid patterns")
-    void shouldRenamePhoneCallAMRFile(String fileName, String expectedContactName, String expectedPhone, CallDirection expectedDirection, @TempDir Path tempDir) {
+    void shouldRenamePhoneCallAMRFile(String fileName, String expectedContactName, String expectedPhone, CallDirection expectedDirection, LocalDateTime expectedDateTime, @TempDir Path tempDir) {
         var filePath = tempDir.resolve(fileName);
         
         var result = strategy.tryRename(filePath);
@@ -43,6 +43,7 @@ class AmrRenameStrategyPhoneTest {
         assertThat(command.from()).isEqualTo(filePath);
         
         var meta = (MediaCommands.AmrPhoneCallMeta) command.meta();
+        assertThat(meta.dateTime()).isEqualTo(expectedDateTime);
         assertThat(meta.contactName()).isEqualTo(expectedContactName);
         assertThat(meta.contactPhone()).isEqualTo(expectedPhone);
         assertThat(meta.direction()).isEqualTo(expectedDirection);
@@ -52,7 +53,7 @@ class AmrRenameStrategyPhoneTest {
     @Test
     @DisplayName("should return empty Optional for non-matching file pattern")
     void shouldReturnEmptyForNonMatchingPattern() {
-        var filePath = Path.of("/path/2021-11-14_15-57-45_some_file.amr");
+        var filePath = Path.of("2021-11-14_15-57-45_some_file.amr");
         
         var result = strategy.tryRename(filePath);
         
