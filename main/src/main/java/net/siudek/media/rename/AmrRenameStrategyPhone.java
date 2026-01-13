@@ -38,8 +38,9 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
     );
 
     /// Pattern for reversed format with phone number only: +48 18 202 00 00 ↗ (phone) 2023-05-27 14-30-22.amr
+    /// Also supports extensions: +48 42 638 97 61 ext. 3691829 ↗ (phone) 2023-09-13 18-31-24.amr
     private static final Pattern AMR_REVERSED_PHONE_ONLY_PATTERN = Pattern.compile(
-        "(\\+?\\d+(?:\\s\\d+)*) ([↙↗]) \\(phone\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
+        "(\\+?\\d+(?:\\s\\d+)*(?:\\sext\\.\\s\\d+)?) ([↙↗]) \\(phone\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
     );
 
     /// Pattern for local phone without arrow (defaults to OUTGOING): 2022-10-02 15-01-16 (phone) John Doe (0048695785583).amr
