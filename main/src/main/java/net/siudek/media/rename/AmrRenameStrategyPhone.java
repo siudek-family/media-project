@@ -18,7 +18,7 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
 
     /// Pattern for phone calls without + prefix: 2021-11-14 15-57-45 (phone) John Doe (0048123456789) ↙.amr
     private static final Pattern AMR_LOCAL_PATTERN = Pattern.compile(
-        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((\\d+)\\) ([↙↗])\\.amr"
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((\\d+(?:\\s\\d+)*)\\) ([↙↗])\\.amr"
     );
 
     /// Pattern for unidentified caller from messenger: 2021-11-14 19-49-35 (phone) 2000 ↙.amr

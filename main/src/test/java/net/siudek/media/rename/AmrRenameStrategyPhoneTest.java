@@ -23,6 +23,7 @@ class AmrRenameStrategyPhoneTest {
     @CsvSource(delimiter = '|', textBlock = """
         2021-11-14 15-57-45 (phone) Jan Kowalski (+48 503 594 583) ↗.amr | Jan Kowalski | +48 503 594 583 | OUTGOING
         2021-11-14 15-57-45 (phone) Jan Kowalski (0048604066737) ↙.amr | Jan Kowalski | 0048604066737 | INCOMING
+        2021-11-15 18-12-28 (phone) Janek (667 044 821) ↙.amr | Janek | 667 044 821 | INCOMING
         2021-11-14 19-49-35 (phone) 2000 ↙.amr | 2000 | 2000 | INCOMING
         """)
     @DisplayName("should rename phone call AMR file with valid patterns")
