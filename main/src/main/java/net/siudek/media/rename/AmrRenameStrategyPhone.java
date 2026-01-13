@@ -26,6 +26,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (\\d+(?:\\s\\d+)*) ([↙↗])\\.amr"
     );
 
+    /// Pattern for unknown named contact without phone: 2021-11-19 18-02-07 (phone) Nieznany kontakt ↙.amr
+    private static final Pattern AMR_NAME_ONLY_PATTERN = Pattern.compile(
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) ([↙↗])\\.amr"
+    );
+
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr or (0048123456789) ↙.amr or 2000 ↙.amr
     /// Returns Optional containing MediaCommands if pattern matches, empty Optional otherwise
     @Override
@@ -51,14 +56,22 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                 contactPhone = matcher.group(2);
                 arrow = matcher.group(3);
             } else {
-                // Try unidentified caller pattern (just ID number)
-                matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
-                if (!matcher.matches()) {
-                    return Optional.empty();
+                // Try unknown named contact without phone
+                matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
+                if (matcher.matches()) {
+                    contactName = matcher.group(1);
+                    contactPhone = matcher.group(1);
+                    arrow = matcher.group(2);
+                } else {
+                    // Try unidentified caller pattern (just ID number)
+                    matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
+                    if (!matcher.matches()) {
+                        return Optional.empty();
+                    }
+                    contactName = matcher.group(1);
+                    contactPhone = matcher.group(1);  // Use ID as phone for unidentified
+                    arrow = matcher.group(2);
                 }
-                contactName = matcher.group(1);
-                contactPhone = matcher.group(1);  // Use ID as phone for unidentified
-                arrow = matcher.group(2);
             }
         }
         

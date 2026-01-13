@@ -25,6 +25,7 @@ class AmrRenameStrategyPhoneTest {
         2021-11-14 15-57-45 (phone) Jan Kowalski (0048604066737) ↙.amr | Jan Kowalski | 0048604066737 | INCOMING
         2021-11-15 18-12-28 (phone) Janek (667 044 821) ↙.amr | Janek | 667 044 821 | INCOMING
         2021-11-19 14-44-06 (phone) 42 237 22 28 ↙.amr | 42 237 22 28 | 42 237 22 28 | INCOMING
+        2021-11-19 18-02-07 (phone) Nieznany kontakt ↙.amr | Nieznany kontakt | Nieznany kontakt | INCOMING
         2021-11-14 19-49-35 (phone) 2000 ↙.amr | 2000 | 2000 | INCOMING
         """)
     @DisplayName("should rename phone call AMR file with valid patterns")
