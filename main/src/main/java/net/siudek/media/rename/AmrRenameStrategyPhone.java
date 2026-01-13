@@ -53,6 +53,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(facebook\\) (.+?)\\.amr"
     );
 
+    /// Pattern for reversed Facebook format with date at end: 0_12 (facebook) 2022-02-18 10-12-13.amr
+    private static final Pattern AMR_REVERSED_FACEBOOK_PATTERN = Pattern.compile(
+        "(.+?) \\(facebook\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
+    );
+
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr or (0048123456789) ↙.amr or 2000 ↙.amr
     /// Returns Optional containing MediaCommands if pattern matches, empty Optional otherwise
     @Override
@@ -60,28 +65,37 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
 
         var fileName = value.getFileName().toString();
         
-        // Try reversed format with phone only first (date at end, no contact name)
-        var matcher = AMR_REVERSED_PHONE_ONLY_PATTERN.matcher(fileName);
+        // Try reversed Facebook format first (date at end)
+        var matcher = AMR_REVERSED_FACEBOOK_PATTERN.matcher(fileName);
         String contactName;
         String contactPhone;
         String arrow;
         LocalDateTime dateTime;
         
         if (matcher.matches()) {
-            contactPhone = matcher.group(1);
-            contactName = contactPhone;  // Use phone as contact name when no name provided
-            arrow = matcher.group(2);
-            dateTime = AmrDateTimeParser.parseDateTime(matcher.group(3));
+            contactName = matcher.group(1);
+            contactPhone = "FACEBOOK";  // Set phone to FACEBOOK to indicate platform
+            arrow = null;  // No arrow means OUTGOING by default
+            dateTime = AmrDateTimeParser.parseDateTime(matcher.group(2));
         } else {
-            // Try reversed format with contact name (date at end)
-            matcher = AMR_REVERSED_LOCAL_PATTERN.matcher(fileName);
+            // Try reversed format with phone only (date at end, no contact name)
+            matcher = AMR_REVERSED_PHONE_ONLY_PATTERN.matcher(fileName);
         
             if (matcher.matches()) {
-                contactName = matcher.group(1);
-                contactPhone = matcher.group(2);
-                arrow = matcher.group(3);
-                dateTime = AmrDateTimeParser.parseDateTime(matcher.group(4));
+                contactPhone = matcher.group(1);
+                contactName = contactPhone;  // Use phone as contact name when no name provided
+                arrow = matcher.group(2);
+                dateTime = AmrDateTimeParser.parseDateTime(matcher.group(3));
             } else {
+                // Try reversed format with contact name (date at end)
+                matcher = AMR_REVERSED_LOCAL_PATTERN.matcher(fileName);
+        
+                if (matcher.matches()) {
+                    contactName = matcher.group(1);
+                    contactPhone = matcher.group(2);
+                    arrow = matcher.group(3);
+                    dateTime = AmrDateTimeParser.parseDateTime(matcher.group(4));
+                } else {
                 // Try international pattern (with contact name and + phone)
                 matcher = AMR_INTERNATIONAL_PATTERN.matcher(fileName);
         
@@ -135,6 +149,7 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                         }
                     }
                     }
+                }
                 }
                 }
             }
