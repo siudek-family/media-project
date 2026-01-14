@@ -86,6 +86,16 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(whatsapp\\) (.+?)\\.amr"
     );
 
+    /// Pattern for reversed Signal format with date at end: ⁩John Doe⁩ (signal) 2022-07-27 11-10-46.amr
+    private static final Pattern AMR_REVERSED_SIGNAL_PATTERN = Pattern.compile(
+        "(.+?) \\(signal\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
+    );
+
+    /// Pattern for Signal calls (defaults to UNDEFINED): 2022-07-27 11-10-46 (signal) John Doe.amr
+    private static final Pattern AMR_SIGNAL_PATTERN = Pattern.compile(
+        "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(signal\\) (.+?)\\.amr"
+    );
+
     /// Pattern for dated recordings with description (undefined direction): 2021-09-17 19-59-50.Some description.amr
     private static final Pattern AMR_DATED_DESCRIPTION_PATTERN = Pattern.compile(
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2}\\.(.+?)\\.amr"
@@ -174,6 +184,20 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                 matcher.group(1),
                 "WHATSAPP",
                 null,
+                AmrDateTimeParser.parseDateTime(matcher.group(2))
+            ));
+        }
+        
+        // Try reversed Signal format (date at end)
+        matcher = AMR_REVERSED_SIGNAL_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            var contactName = matcher.group(1).trim();
+            // Remove invisible characters like ⁩ from contact name
+            contactName = contactName.replaceAll("[\u2069\u2066]", "");
+            return Optional.of(new AmrPhoneData(
+                contactName,
+                "SIGNAL",
+                "UNDEFINED",
                 AmrDateTimeParser.parseDateTime(matcher.group(2))
             ));
         }
@@ -329,6 +353,20 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                 matcher.group(1),
                 "WHATSAPP",
                 null,
+                AmrDateTimeParser.parseDateTime(fileName)
+            ));
+        }
+        
+        // Try Signal call pattern (defaults to UNDEFINED)
+        matcher = AMR_SIGNAL_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            var contactName = matcher.group(1).trim();
+            // Remove invisible characters like ⁩ from contact name
+            contactName = contactName.replaceAll("[\u2069\u2066]", "");
+            return Optional.of(new AmrPhoneData(
+                contactName,
+                "SIGNAL",
+                "UNDEFINED",
                 AmrDateTimeParser.parseDateTime(fileName)
             ));
         }
