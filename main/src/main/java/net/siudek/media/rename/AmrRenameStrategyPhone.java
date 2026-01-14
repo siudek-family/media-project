@@ -49,6 +49,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) \\((\\d+(?:\\s\\d+)*)\\)\\.amr"
     );
 
+    /// Pattern for unidentified phone number without arrow (direction: UNDEFINED): 44 649 96 84 (phone) 2022-08-16 08-18-00.amr
+    private static final Pattern AMR_UNIDENTIFIED_NO_ARROW_PATTERN = Pattern.compile(
+        "(\\d+(?:\\s\\d+)*) \\(phone\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
+    );
+
     /// Pattern for Facebook calls (defaults to OUTGOING): 2022-11-08 13-04-02 (facebook) John Doe.amr
     private static final Pattern AMR_FACEBOOK_PATTERN = Pattern.compile(
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(facebook\\) (.+?)\\.amr"
@@ -200,9 +205,10 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         return Optional.empty();
     }
 
-    /// Try standard phone pattern without arrow (defaults to OUTGOING)
-    /// Pattern: AMR_LOCAL_NO_ARROW_PATTERN
+    /// Try standard phone pattern without arrow (defaults to OUTGOING or UNDEFINED)
+    /// Patterns: AMR_LOCAL_NO_ARROW_PATTERN, AMR_UNIDENTIFIED_NO_ARROW_PATTERN
     private Optional<AmrPhoneData> tryMatchStandardPhoneNoArrow(String fileName) {
+        // Try named contact without arrow (defaults to OUTGOING)
         var matcher = AMR_LOCAL_NO_ARROW_PATTERN.matcher(fileName);
         if (matcher.matches()) {
             return Optional.of(new AmrPhoneData(
@@ -212,6 +218,19 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                 AmrDateTimeParser.parseDateTime(fileName)
             ));
         }
+        
+        // Try unidentified phone number without arrow (direction: UNDEFINED)
+        matcher = AMR_UNIDENTIFIED_NO_ARROW_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            var contactPhone = matcher.group(1);
+            return Optional.of(new AmrPhoneData(
+                contactPhone,
+                contactPhone,
+                "UNDEFINED",
+                AmrDateTimeParser.parseDateTime(matcher.group(2))
+            ));
+        }
+        
         return Optional.empty();
     }
 
@@ -289,8 +308,12 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
     }
 
     /// Determine call direction based on arrow and contactPhone
+    /// "UNDEFINED" arrow explicitly sets direction to UNDEFINED
     /// null arrow defaults to OUTGOING unless contactPhone is UNKNOWN (then UNDEFINED)
     private MediaCommands.CallDirection determineDirection(String arrow, String contactPhone) {
+        if ("UNDEFINED".equals(arrow)) {
+            return MediaCommands.CallDirection.UNDEFINED;
+        }
         if (arrow == null) {
             return contactPhone.equals("UNKNOWN") 
                 ? MediaCommands.CallDirection.UNDEFINED 

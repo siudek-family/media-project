@@ -37,6 +37,7 @@ class AmrRenameStrategyPhoneTest {
         20200728-184500.Some description.amr | Some description | UNKNOWN | UNDEFINED | 2020-07-28T18:45:00
         2021-09-17 19-59-50.Asia - kanapki na wyjazd.amr | Asia - kanapki na wyjazd | UNKNOWN | UNDEFINED | 2021-09-17T19:59:50
         20201014-225441.amr | UNKNOWN | UNKNOWN | UNDEFINED | 2020-10-14T22:54:41
+        44 649 96 84 (phone) 2022-08-16 08-18-00.amr | 44 649 96 84 | 44 649 96 84 | UNDEFINED | 2022-08-16T08:18:00
         """)
     @DisplayName("should rename phone call AMR file with valid patterns")
     void shouldRenamePhoneCallAMRFile(String fileName, String expectedContactName, String expectedPhone, CallDirection expectedDirection, LocalDateTime expectedDateTime, @TempDir Path tempDir) {
