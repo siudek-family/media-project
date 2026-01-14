@@ -66,6 +66,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "(.+?) \\(facebook\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
     );
 
+    /// Pattern for reversed WhatsApp format with date at end: Gerhard Klopper (whatsapp) 2020-09-11 20-04-48.amr
+    private static final Pattern AMR_REVERSED_WHATSAPP_PATTERN = Pattern.compile(
+        "(.+?) \\(whatsapp\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
+    );
+
     /// Pattern for WhatsApp calls (defaults to OUTGOING): 2020-11-05 21-27-39 (whatsapp) John Doe.amr
     private static final Pattern AMR_WHATSAPP_PATTERN = Pattern.compile(
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(whatsapp\\) (.+?)\\.amr"
@@ -115,7 +120,7 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
     }
 
     /// Try reversed format patterns: contact/phone first, date at end
-    /// Patterns: AMR_REVERSED_LOCAL_PATTERN, AMR_REVERSED_PHONE_ONLY_PATTERN, AMR_REVERSED_FACEBOOK_PATTERN
+    /// Patterns: AMR_REVERSED_FACEBOOK_PATTERN, AMR_REVERSED_WHATSAPP_PATTERN, AMR_REVERSED_PHONE_ONLY_PATTERN, AMR_REVERSED_LOCAL_PATTERN
     private Optional<AmrPhoneData> tryMatchReversedFormat(String fileName) {
         // Try reversed Facebook format first (date at end)
         var matcher = AMR_REVERSED_FACEBOOK_PATTERN.matcher(fileName);
@@ -124,6 +129,17 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
             return Optional.of(new AmrPhoneData(
                 matcher.group(1),
                 "FACEBOOK",
+                null,
+                AmrDateTimeParser.parseDateTime(matcher.group(2))
+            ));
+        }
+        
+        // Try reversed WhatsApp format (date at end)
+        matcher = AMR_REVERSED_WHATSAPP_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            return Optional.of(new AmrPhoneData(
+                matcher.group(1),
+                "WHATSAPP",
                 null,
                 AmrDateTimeParser.parseDateTime(matcher.group(2))
             ));
