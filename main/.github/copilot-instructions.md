@@ -42,17 +42,7 @@ Tests use `@SpringBootTest` with mocked `CommandsListener` to capture command em
 
 ### 1. **Sealed Interfaces for Domain Models**
 
-`Source.java` uses sealed interfaces to define exhaustive type hierarchies for supported media types:
-```java
-sealed interface Source {
-  sealed interface Dir extends Source {}
-  sealed interface File extends Source {}
-  record AmrFile(Path value) implements File {}
-  // ... other file types
-}
-```
-
-**Convention**: When adding new file type support, add a new record to `Source` and implement corresponding rename/validation logic.
+`Source.java` uses sealed interfaces to define exhaustive type hierarchies for supported media types. See [java.instructions.md](instructions/java.instructions.md) for pattern details and conventions.
 
 ### 2. **Strategy Pattern for Rename Operations**
 
@@ -62,41 +52,13 @@ Rename strategies implement `RenameStrategy` interface (see `Generic1RenameStrat
 - Strategies are autowired into container and iterated during processing
 - `Media.verifyNameConvention()` iterates all strategies and ensures exactly one matches per file
 
-**Adding a new rename strategy**:
-1. Create class implementing `RenameStrategy`
-2. Inject `CommandsListener` (required to emit commands)
-3. Annotate with `@Component` for auto-discovery
-4. Implement pattern matching logic in `tryRename(Path)`
-5. Extract regex groups and construct appropriate `Meta` record type
-6. Emit `RenameMediaItem` command with extracted metadata
+For implementation details and step-by-step guide, see [java.instructions.md](instructions/java.instructions.md).
 
 ### 3. **Command Emission over Direct Side Effects**
 
-All strategy operations emit domain commands rather than directly performing I/O:
-```java
-var cmd = new MediaCommands.RenameMediaItem(path, newFileName);
-commandsListener.on(cmd);
-```
+All strategy operations emit domain commands rather than directly performing I/O. This decouples strategy logic from execution and enables testing via mock listeners. See [java.instructions.md](instructions/java.instructions.md) for implementation pattern.
 
-**Benefit**: Decouples strategy logic from execution; enables testing via mock listeners and flexible command handling (logging, actual rename, audit).
-
-### 4. **Pattern Matching & Modern Java**
-
-Code consistently uses:
-- **Switch expressions with sealed types** (switch on `Source` subtypes)
-- **Records** for immutable data (command types, file types)
-- **`var` inference** for local variables where type is clear from RHS
-- **`@Slf4j`** (Lombok) for logging instead of manual logger fields
-
-**Example** from `Media.java`:
-```java
-switch (source.source()) {
-  case Source.MediaDir mediaDir -> { /* pattern matched */ }
-  case Source.GitDir gitDir -> { /* ... */ }
-}
-```
-
-### 5. **Listener/Observer for Event Handling**
+### 4. **Listener/Observer for Event Handling**
 
 `CommandsListener` interface enables extensible command handling:
 - `LoggingCommandsListener`: Spring component that logs all commands
@@ -135,15 +97,11 @@ src/main/java/net/siudek/media/
 
 ## Code Quality Guidelines
 
-Reference [java.instructions.md](instructions/java.instructions.md) for project-specific Java best practices:
-
-- **Records over classes** for data-heavy types (already done in codebase)
-- **Pattern matching** for instanceof/switch (actively used)
-- **Sealed types** for exhaustive domain hierarchies (Source model exemplifies this)
-- **Immutability**: Favor `final` classes and collections from `List.of()`, `Stream.toList()`
-- **Null handling**: Use `Optional<T>` for possibly-absent values
-- **Resource management**: Use try-with-resources for file I/O
-- **Build verification**: Always run `./mvnw clean install` after changes
+All Java code should follow the guidelines in [java.instructions.md](instructions/java.instructions.md), which includes:
+- Modern Java best practices (records, pattern matching, sealed types, var inference)
+- Project-specific patterns (sealed interfaces, strategy pattern, command emission)
+- Code quality rules (immutability, null handling, resource management)
+- Build verification and testing standards
 
 ## When Adding New Features
 

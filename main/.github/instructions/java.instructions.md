@@ -64,3 +64,71 @@ If you run a static analyzer like Sonar or SonarLint — direct Sonar connection
 - use JUnit 5 for unit testing.
 - use Mockito for mocking dependencies in tests.
 - use AssertJ for fluent assertions, avoid using JUnit assertions.
+- use `@SpringBootTest` with mocked dependencies to capture emitted commands.
+- Assert on command type and properties (e.g., rename source/target).
+
+## Project-Specific Java Patterns
+
+### Sealed Interfaces for Domain Models
+
+Use sealed interfaces to define exhaustive type hierarchies for supported media types:
+```java
+sealed interface Source {
+  sealed interface Dir extends Source {}
+  sealed interface File extends Source {}
+  record AmrFile(Path value) implements File {}
+  // ... other file types
+}
+```
+
+**Convention**: When adding new file type support, add a new record to `Source` and implement corresponding rename/validation logic.
+
+### Pattern Matching with Sealed Types
+
+Code consistently uses:
+- **Switch expressions with sealed types** (switch on `Source` subtypes)
+- **Records** for immutable data (command types, file types)
+- **`var` inference** for local variables where type is clear from RHS
+- **`@Slf4j`** (Lombok) for logging instead of manual logger fields
+
+**Example**:
+```java
+switch (source.source()) {
+  case Source.MediaDir mediaDir -> { /* pattern matched */ }
+  case Source.GitDir gitDir -> { /* ... */ }
+}
+```
+
+### Strategy Pattern Implementation
+
+Rename strategies implement `RenameStrategy` interface:
+- Each strategy validates file name patterns via regex
+- On match, emits commands via `CommandsListener`
+- Strategies are autowired into container and iterated during processing
+
+**Adding a new rename strategy**:
+1. Create class implementing `RenameStrategy`
+2. Inject `CommandsListener` (required to emit commands)
+3. Annotate with `@Component` for auto-discovery
+4. Implement pattern matching logic in `tryRename(Path)`
+5. Extract regex groups and construct appropriate `Meta` record type
+6. Emit command with extracted metadata
+
+### Command Emission over Direct Side Effects
+
+All strategy operations emit domain commands rather than directly performing I/O:
+```java
+var cmd = new MediaCommands.RenameMediaItem(path, newFileName);
+commandsListener.on(cmd);
+```
+
+**Benefit**: Decouples strategy logic from execution; enables testing via mock listeners and flexible command handling (logging, actual rename, audit).
+
+### Listener/Observer for Event Handling
+
+`CommandsListener` interface enables extensible command handling:
+- Spring component that logs all commands
+- Tests override with test implementation to capture emissions
+- Strategies never know *how* commands are handled
+
+**When adding new command types**: Define new records in `MediaCommands` and ensure listeners handle them appropriately.
