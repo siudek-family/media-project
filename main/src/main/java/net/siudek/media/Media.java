@@ -44,15 +44,15 @@ public class Media {
     }
     
     void process(Source.MediaDir mediaDir, Set<MediaItem> result) {
-        for (var dir : mediaDir.subdirs()) {
-            switch (dir) {
-                case Source.MediaDir subMediaDir -> {
-                    process(subMediaDir, result);
+        for (var subdir : mediaDir.subdirs()) {
+            switch (subdir) {
+                case Source.MediaDir it -> {
+                    process(it, result);
                 }
-                case Source.GitDir gitDir -> {
+                case Source.GitDir _ -> {
                     // process git dir
                 }
-                case Source.DvdDir dvdDir -> {
+                case Source.DvdDir _ -> {
                     // process dvd dir
                 }
             }

@@ -12,7 +12,8 @@ public sealed interface MediaCommands {
 
     enum CallDirection {
         INCOMING,
-        OUTGOING
+        OUTGOING,
+        UNDEFINED
     }
 
     record GenericMeta(LocalDateTime date, String extension, Path location) implements Meta {}
@@ -36,10 +37,11 @@ public sealed interface MediaCommands {
             }
             case AmrPhoneCallMeta phoneCallMeta -> {
                 var direction = switch (phoneCallMeta.direction()) {
-                    case INCOMING -> "↘";
-                    case OUTGOING -> "↗";
+                    case INCOMING -> " ↘";
+                    case OUTGOING -> " ↗";
+                    case UNDEFINED -> "";
                 };
-                yield String.format("%s (%s) (%s) %s.amr",
+                yield String.format("%s (%s) (%s)%s.amr",
                     phoneCallMeta.dateTime().format(formatter),
                     phoneCallMeta.contactName(),
                     phoneCallMeta.contactPhone(),

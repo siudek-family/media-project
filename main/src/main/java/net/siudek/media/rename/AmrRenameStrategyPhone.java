@@ -2,6 +2,7 @@ package net.siudek.media.rename;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -61,6 +62,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
     /// Pattern for WhatsApp calls (defaults to OUTGOING): 2020-11-05 21-27-39 (whatsapp) John Doe.amr
     private static final Pattern AMR_WHATSAPP_PATTERN = Pattern.compile(
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(whatsapp\\) (.+?)\\.amr"
+    );
+
+    /// Pattern for compact date format with description (undefined direction): 20200728-184500.Some description.amr
+    private static final Pattern AMR_COMPACT_DATE_DESCRIPTION_PATTERN = Pattern.compile(
+        "(\\d{8})-(\\d{6})\\.(.+?)\\.amr"
     );
 
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr or (0048123456789) ↙.amr or 2000 ↙.amr
@@ -142,35 +148,46 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                                 arrow = null;  // No arrow means OUTGOING by default
                                 dateTime = AmrDateTimeParser.parseDateTime(fileName);
                             } else {
-                                // Try unknown named contact without phone
-                                matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
+                                // Try compact date format with description (undefined direction)
+                                matcher = AMR_COMPACT_DATE_DESCRIPTION_PATTERN.matcher(fileName);
                                 if (matcher.matches()) {
-                                    contactName = matcher.group(1);
-                                    contactPhone = matcher.group(1);
-                                    arrow = matcher.group(2);
-                                    dateTime = AmrDateTimeParser.parseDateTime(fileName);
+                                    var dateStr = matcher.group(1) + matcher.group(2);  // Combine date and time
+                                    dateTime = parseCompactDateTime(dateStr);
+                                    contactName = matcher.group(3);
+                                    contactPhone = "UNKNOWN";
+                                    arrow = null;  // No arrow, will map to UNDEFINED
                                 } else {
-                                    // Try unidentified caller pattern (just ID number)
-                                    matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
-                            if (!matcher.matches()) {
-                                return Optional.empty();
+                                    // Try unknown named contact without phone
+                                    matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
+                                    if (matcher.matches()) {
+                                        contactName = matcher.group(1);
+                                        contactPhone = matcher.group(1);
+                                        arrow = matcher.group(2);
+                                        dateTime = AmrDateTimeParser.parseDateTime(fileName);
+                                    } else {
+                                        // Try unidentified caller pattern (just ID number)
+                                        matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
+                                        if (!matcher.matches()) {
+                                            return Optional.empty();
+                                        }
+                                        contactName = matcher.group(1);
+                                        contactPhone = matcher.group(1);  // Use ID as phone for unidentified
+                                        arrow = matcher.group(2);
+                                        dateTime = AmrDateTimeParser.parseDateTime(fileName);
+                                    }
+                                }
                             }
-                            contactName = matcher.group(1);
-                            contactPhone = matcher.group(1);  // Use ID as phone for unidentified
-                            arrow = matcher.group(2);
-                            dateTime = AmrDateTimeParser.parseDateTime(fileName);
                         }
                     }
-                    }
-                    }
-                }
                 }
                 }
             }
+            }
         }
         
-        // Determine call direction based on arrow (null means OUTGOING by default)
-        var direction = arrow == null ? MediaCommands.CallDirection.OUTGOING : switch(arrow) {
+        // Determine call direction based on arrow (null means OUTGOING by default, unless it's a compact date format)
+        var direction = (arrow == null && contactPhone.equals("UNKNOWN")) ? MediaCommands.CallDirection.UNDEFINED :
+                        arrow == null ? MediaCommands.CallDirection.OUTGOING : switch(arrow) {
             case "↙" -> MediaCommands.CallDirection.INCOMING;
             case "↗" -> MediaCommands.CallDirection.OUTGOING;
             default -> throw new IllegalStateException("Unexpected value: " + arrow);
@@ -186,6 +203,13 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         
         var cmd = new MediaCommands.RenameMediaItem(value, meta);
         return Optional.of(cmd);
+    }
+
+    /// Parse compact date-time format: yyyyMMddHHmmss
+    /// Example: "20200728184500" -> LocalDateTime(2020, 7, 28, 18, 45, 0)
+    private static LocalDateTime parseCompactDateTime(String dateTimeString) {
+        var formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        return LocalDateTime.parse(dateTimeString, formatter);
     }
 
 }
