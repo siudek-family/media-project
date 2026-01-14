@@ -33,6 +33,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2} \\(phone\\) (.+?) ([↙↗])\\.amr"
     );
 
+    /// Pattern for unknown named contact with arrow before (phone): Nieznany kontakt ↙ (phone) 2020-08-05 19-07-44.amr
+    private static final Pattern AMR_NAME_ARROW_BEFORE_PHONE_PATTERN = Pattern.compile(
+        "(.+?) ([↙↗]) \\(phone\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
+    );
+
     /// Pattern for reversed format with date at end: John Doe (663 444 136) ↗ (phone) 2022-06-18 14-14-47.amr
     /// Also supports international phone: Adrian Cypr (+48 508 459 596) ↗ (phone) 2023-06-08 14-15-23.amr
     private static final Pattern AMR_REVERSED_LOCAL_PATTERN = Pattern.compile(
@@ -180,6 +185,18 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                 matcher.group(1),
                 matcher.group(2),
                 "UNDEFINED",
+                AmrDateTimeParser.parseDateTime(matcher.group(3))
+            ));
+        }
+        
+        // Try contact name with arrow before (phone): Nieznany kontakt ↙ (phone) 2020-08-05 19-07-44.amr
+        matcher = AMR_NAME_ARROW_BEFORE_PHONE_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            var contactName = matcher.group(1);
+            return Optional.of(new AmrPhoneData(
+                contactName,
+                contactName,
+                matcher.group(2),
                 AmrDateTimeParser.parseDateTime(matcher.group(3))
             ));
         }
