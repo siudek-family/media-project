@@ -35,6 +35,7 @@ class AmrRenameStrategyPhoneTest {
         0_12 (facebook) 2022-02-18 10-12-13.amr | 0_12 | FACEBOOK | OUTGOING | 2022-02-18T10:12:13
         2020-11-05 21-27-39 (whatsapp) John Doe.amr | John Doe | WHATSAPP | OUTGOING | 2020-11-05T21:27:39
         20200728-184500.Some description.amr | Some description | UNKNOWN | UNDEFINED | 2020-07-28T18:45:00
+        2021-09-17 19-59-50.Asia - kanapki na wyjazd.amr | Asia - kanapki na wyjazd | UNKNOWN | UNDEFINED | 2021-09-17T19:59:50
         20201014-225441.amr | UNKNOWN | UNKNOWN | UNDEFINED | 2020-10-14T22:54:41
         """)
     @DisplayName("should rename phone call AMR file with valid patterns")
