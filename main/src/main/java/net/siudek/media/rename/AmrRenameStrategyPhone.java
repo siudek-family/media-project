@@ -101,6 +101,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "(\\d{8})-(\\d{6})\\.amr"
     );
 
+    /// Pattern for phone prefix format: phone_20200728-111324_0048663444136.amr
+    private static final Pattern AMR_PHONE_PREFIX_PATTERN = Pattern.compile(
+        "phone_(\\d{8})-(\\d{6})_(\\d+)\\.amr"
+    );
+
     /// Record to hold extracted phone call data from filename patterns
     private record AmrPhoneData(String contactName, String contactPhone, String arrow, LocalDateTime dateTime) {}
 
@@ -111,7 +116,8 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         var fileName = value.getFileName().toString();
         
         // Try patterns in priority order using Optional chaining
-        return tryMatchReversedFormat(fileName)
+        return tryMatchPhonePrefixFormat(fileName)
+            .or(() -> tryMatchReversedFormat(fileName))
             .or(() -> tryMatchStandardPhoneWithArrow(fileName))
             .or(() -> tryMatchStandardPhoneNoArrow(fileName))
             .or(() -> tryMatchSocialMediaStandardFormat(fileName))
@@ -127,6 +133,23 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                     value);
                 return new MediaCommands.RenameMediaItem(value, meta);
             });
+    }
+
+    /// Try phone prefix format: phone_20200728-111324_0048663444136.amr
+    /// Pattern: AMR_PHONE_PREFIX_PATTERN
+    private Optional<AmrPhoneData> tryMatchPhonePrefixFormat(String fileName) {
+        var matcher = AMR_PHONE_PREFIX_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            var dateStr = matcher.group(1) + matcher.group(2);
+            var phoneNumber = matcher.group(3);
+            return Optional.of(new AmrPhoneData(
+                "Nieznany kontakt",
+                phoneNumber,
+                "↙",  // INCOMING direction for phone_ prefix format
+                parseCompactDateTime(dateStr)
+            ));
+        }
+        return Optional.empty();
     }
 
     /// Try reversed format patterns: contact/phone first, date at end
