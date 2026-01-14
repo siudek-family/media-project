@@ -39,6 +39,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "(.+?) \\((\\+?\\d+(?:\\s\\d+)*)\\) ([↙↗]) \\(phone\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
     );
 
+    /// Pattern for reversed format without arrow (direction: UNDEFINED): Helena Dawid (607 739 779) (phone) 2022-08-31 21-16-24.amr
+    private static final Pattern AMR_REVERSED_LOCAL_NO_ARROW_PATTERN = Pattern.compile(
+        "(.+?) \\((\\d+(?:\\s\\d+)*)\\) \\(phone\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
+    );
+
     /// Pattern for reversed format with phone number only: +48 18 202 00 00 ↗ (phone) 2023-05-27 14-30-22.amr
     /// Also supports extensions: +48 42 638 97 61 ext. 3691829 ↗ (phone) 2023-09-13 18-31-24.amr
     /// Also supports special chars in phone: 717574512,,042629215060_ ↗ (phone) 2023-06-22 16-11-30.amr
@@ -165,6 +170,17 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                 matcher.group(2),
                 matcher.group(3),
                 AmrDateTimeParser.parseDateTime(matcher.group(4))
+            ));
+        }
+        
+        // Try reversed format with contact name without arrow (direction: UNDEFINED)
+        matcher = AMR_REVERSED_LOCAL_NO_ARROW_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            return Optional.of(new AmrPhoneData(
+                matcher.group(1),
+                matcher.group(2),
+                "UNDEFINED",
+                AmrDateTimeParser.parseDateTime(matcher.group(3))
             ));
         }
         
