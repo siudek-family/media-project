@@ -34,8 +34,9 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
     );
 
     /// Pattern for reversed format with date at end: John Doe (663 444 136) ↗ (phone) 2022-06-18 14-14-47.amr
+    /// Also supports international phone: Adrian Cypr (+48 508 459 596) ↗ (phone) 2023-06-08 14-15-23.amr
     private static final Pattern AMR_REVERSED_LOCAL_PATTERN = Pattern.compile(
-        "(.+?) \\((\\d+(?:\\s\\d+)*)\\) ([↙↗]) \\(phone\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
+        "(.+?) \\((\\+?\\d+(?:\\s\\d+)*)\\) ([↙↗]) \\(phone\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
     );
 
     /// Pattern for reversed format with phone number only: +48 18 202 00 00 ↗ (phone) 2023-05-27 14-30-22.amr
