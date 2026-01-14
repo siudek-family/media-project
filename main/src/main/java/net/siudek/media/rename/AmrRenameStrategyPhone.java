@@ -69,6 +69,11 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "(\\d{8})-(\\d{6})\\.(.+?)\\.amr"
     );
 
+    /// Pattern for compact date format only (undefined direction): 20201014-225441.amr
+    private static final Pattern AMR_COMPACT_DATE_ONLY_PATTERN = Pattern.compile(
+        "(\\d{8})-(\\d{6})\\.amr"
+    );
+
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr or (0048123456789) ↙.amr or 2000 ↙.amr
     /// Returns Optional containing MediaCommands if pattern matches, empty Optional otherwise
     @Override
@@ -157,23 +162,33 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
                                     contactPhone = "UNKNOWN";
                                     arrow = null;  // No arrow, will map to UNDEFINED
                                 } else {
-                                    // Try unknown named contact without phone
-                                    matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
+                                    // Try compact date format only (undefined direction)
+                                    matcher = AMR_COMPACT_DATE_ONLY_PATTERN.matcher(fileName);
                                     if (matcher.matches()) {
-                                        contactName = matcher.group(1);
-                                        contactPhone = matcher.group(1);
-                                        arrow = matcher.group(2);
-                                        dateTime = AmrDateTimeParser.parseDateTime(fileName);
+                                        var dateStr = matcher.group(1) + matcher.group(2);  // Combine date and time
+                                        dateTime = parseCompactDateTime(dateStr);
+                                        contactName = "UNKNOWN";
+                                        contactPhone = "UNKNOWN";
+                                        arrow = null;  // No arrow, will map to UNDEFINED
                                     } else {
-                                        // Try unidentified caller pattern (just ID number)
-                                        matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
-                                        if (!matcher.matches()) {
-                                            return Optional.empty();
+                                        // Try unknown named contact without phone
+                                        matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
+                                        if (matcher.matches()) {
+                                            contactName = matcher.group(1);
+                                            contactPhone = matcher.group(1);
+                                            arrow = matcher.group(2);
+                                            dateTime = AmrDateTimeParser.parseDateTime(fileName);
+                                        } else {
+                                            // Try unidentified caller pattern (just ID number)
+                                            matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
+                                            if (!matcher.matches()) {
+                                                return Optional.empty();
+                                            }
+                                            contactName = matcher.group(1);
+                                            contactPhone = matcher.group(1);  // Use ID as phone for unidentified
+                                            arrow = matcher.group(2);
+                                            dateTime = AmrDateTimeParser.parseDateTime(fileName);
                                         }
-                                        contactName = matcher.group(1);
-                                        contactPhone = matcher.group(1);  // Use ID as phone for unidentified
-                                        arrow = matcher.group(2);
-                                        dateTime = AmrDateTimeParser.parseDateTime(fileName);
                                     }
                                 }
                             }
