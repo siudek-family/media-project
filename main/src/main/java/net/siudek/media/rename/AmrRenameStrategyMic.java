@@ -13,6 +13,7 @@ import net.siudek.media.MediaCommands;
 @Component
 /// Example to match: 2021-11-14 17-49-05 (mic) Nagrywanie dyktafonu.amr
 /// or: mic_20200801-173827.amr
+/// or: Nagrywanie dyktafonu (mic) 2020-10-14 08-34-03.amr
 public class AmrRenameStrategyMic implements RenameStrategy {
 
     private static final Pattern AMR_PATTERN = Pattern.compile(
@@ -23,6 +24,11 @@ public class AmrRenameStrategyMic implements RenameStrategy {
     /// Captures the entire name (including the date part) as title, parses date from it
     private static final Pattern AMR_COMPACT_PATTERN = Pattern.compile(
         "(.+?_(\\d{8})-(\\d{6}))\\.amr"
+    );
+
+    /// Pattern for reversed format with date at end: Nagrywanie dyktafonu (mic) 2020-10-14 08-34-03.amr
+    private static final Pattern AMR_REVERSED_PATTERN = Pattern.compile(
+        "(.+?) \\(mic\\) (\\d{4}-\\d{2}-\\d{2} \\d{2}-\\d{2}-\\d{2})\\.amr"
     );
 
     @Override
@@ -36,6 +42,22 @@ public class AmrRenameStrategyMic implements RenameStrategy {
             var title = matcher.group(1);
             var dateStr = matcher.group(2) + matcher.group(3);
             var dateTime = parseCompactDateTime(dateStr);
+            
+            // Create meta from available parts
+            var meta = new MediaCommands.AmrMicRecordingMeta(
+                dateTime,
+                title,
+                value);
+            
+            var cmd = new MediaCommands.RenameMediaItem(value, meta);
+            return Optional.of(cmd);
+        }
+        
+        // Try reversed format with date at end
+        matcher = AMR_REVERSED_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            var title = matcher.group(1);
+            var dateTime = AmrDateTimeParser.parseDateTime(matcher.group(2));
             
             // Create meta from available parts
             var meta = new MediaCommands.AmrMicRecordingMeta(

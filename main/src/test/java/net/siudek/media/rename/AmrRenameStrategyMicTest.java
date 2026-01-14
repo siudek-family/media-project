@@ -22,6 +22,7 @@ class AmrRenameStrategyMicTest {
     @CsvSource(delimiter = '|', textBlock = """
         2021-11-14 17-49-05 (mic) Nagrywanie dyktafonu.amr | Nagrywanie dyktafonu | 2021-11-14T17:49:05
         mic_20200801-173827.amr | mic_20200801-173827 | 2020-08-01T17:38:27
+        Nagrywanie dyktafonu (mic) 2020-10-14 08-34-03.amr | Nagrywanie dyktafonu | 2020-10-14T08:34:03
         """)
     @DisplayName("should rename microphone recording AMR file with valid patterns")
     void shouldRenameMicrophoneRecordingAMRFile(String fileName, String expectedTitle, LocalDateTime expectedDateTime, @TempDir Path tempDir) {
