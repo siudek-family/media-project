@@ -79,159 +79,228 @@ public class AmrRenameStrategyPhone implements RenameStrategy {
         "(\\d{8})-(\\d{6})\\.amr"
     );
 
+    /// Record to hold extracted phone call data from filename patterns
+    private record AmrPhoneData(String contactName, String contactPhone, String arrow, LocalDateTime dateTime) {}
+
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr or (0048123456789) ↙.amr or 2000 ↙.amr
     /// Returns Optional containing MediaCommands if pattern matches, empty Optional otherwise
     @Override
     public Optional<MediaCommands> tryRename(Path value) {
-
         var fileName = value.getFileName().toString();
         
+        // Try patterns in priority order using Optional chaining
+        return tryMatchReversedFormat(fileName)
+            .or(() -> tryMatchStandardPhoneWithArrow(fileName))
+            .or(() -> tryMatchStandardPhoneNoArrow(fileName))
+            .or(() -> tryMatchSocialMediaStandardFormat(fileName))
+            .or(() -> tryMatchGenericRecordingStandardFormat(fileName))
+            .or(() -> tryMatchCompactDateFormat(fileName))
+            .map(data -> {
+                var direction = determineDirection(data.arrow, data.contactPhone);
+                var meta = new MediaCommands.AmrPhoneCallMeta(
+                    data.dateTime,
+                    data.contactName,
+                    data.contactPhone,
+                    direction,
+                    value);
+                return new MediaCommands.RenameMediaItem(value, meta);
+            });
+    }
+
+    /// Try reversed format patterns: contact/phone first, date at end
+    /// Patterns: AMR_REVERSED_LOCAL_PATTERN, AMR_REVERSED_PHONE_ONLY_PATTERN, AMR_REVERSED_FACEBOOK_PATTERN
+    private Optional<AmrPhoneData> tryMatchReversedFormat(String fileName) {
         // Try reversed Facebook format first (date at end)
         var matcher = AMR_REVERSED_FACEBOOK_PATTERN.matcher(fileName);
-        String contactName;
-        String contactPhone;
-        String arrow;
-        LocalDateTime dateTime;
         
         if (matcher.matches()) {
-            contactName = matcher.group(1);
-            contactPhone = "FACEBOOK";  // Set phone to FACEBOOK to indicate platform
-            arrow = null;  // No arrow means OUTGOING by default
-            dateTime = AmrDateTimeParser.parseDateTime(matcher.group(2));
-        } else {
-            // Try reversed format with phone only (date at end, no contact name)
-            matcher = AMR_REVERSED_PHONE_ONLY_PATTERN.matcher(fileName);
-        
-            if (matcher.matches()) {
-                contactPhone = matcher.group(1);
-                contactName = contactPhone;  // Use phone as contact name when no name provided
-                arrow = matcher.group(2);
-                dateTime = AmrDateTimeParser.parseDateTime(matcher.group(3));
-            } else {
-                // Try reversed format with contact name (date at end)
-                matcher = AMR_REVERSED_LOCAL_PATTERN.matcher(fileName);
-        
-                if (matcher.matches()) {
-                    contactName = matcher.group(1);
-                    contactPhone = matcher.group(2);
-                    arrow = matcher.group(3);
-                    dateTime = AmrDateTimeParser.parseDateTime(matcher.group(4));
-                } else {
-                // Try international pattern (with contact name and + phone)
-                matcher = AMR_INTERNATIONAL_PATTERN.matcher(fileName);
-        
-                if (matcher.matches()) {
-                    contactName = matcher.group(1);
-                    contactPhone = matcher.group(2);
-                    arrow = matcher.group(3);
-                    dateTime = AmrDateTimeParser.parseDateTime(fileName);
-                } else {
-                    // Try local pattern (with contact name and local phone)
-                    matcher = AMR_LOCAL_PATTERN.matcher(fileName);
-                if (matcher.matches()) {
-                    contactName = matcher.group(1);
-                    contactPhone = matcher.group(2);
-                    arrow = matcher.group(3);
-                    dateTime = AmrDateTimeParser.parseDateTime(fileName);
-                } else {
-                    // Try local pattern without arrow (defaults to OUTGOING)
-                    matcher = AMR_LOCAL_NO_ARROW_PATTERN.matcher(fileName);
-                    if (matcher.matches()) {
-                        contactName = matcher.group(1);
-                        contactPhone = matcher.group(2);
-                        arrow = null;  // No arrow means OUTGOING by default
-                        dateTime = AmrDateTimeParser.parseDateTime(fileName);
-                    } else {
-                        // Try Facebook call pattern (defaults to OUTGOING)
-                        matcher = AMR_FACEBOOK_PATTERN.matcher(fileName);
-                        if (matcher.matches()) {
-                            contactName = matcher.group(1);
-                            contactPhone = "FACEBOOK";  // Set phone to FACEBOOK to indicate platform
-                            arrow = null;  // No arrow means OUTGOING by default
-                            dateTime = AmrDateTimeParser.parseDateTime(fileName);
-                        } else {
-                            // Try WhatsApp call pattern (defaults to OUTGOING)
-                            matcher = AMR_WHATSAPP_PATTERN.matcher(fileName);
-                            if (matcher.matches()) {
-                                contactName = matcher.group(1);
-                                contactPhone = "WHATSAPP";  // Set phone to WHATSAPP to indicate platform
-                                arrow = null;  // No arrow means OUTGOING by default
-                                dateTime = AmrDateTimeParser.parseDateTime(fileName);
-                            } else {
-                                // Try dated description format (undefined direction)
-                                matcher = AMR_DATED_DESCRIPTION_PATTERN.matcher(fileName);
-                                if (matcher.matches()) {
-                                    dateTime = AmrDateTimeParser.parseDateTime(fileName);
-                                    contactName = matcher.group(1);
-                                    contactPhone = "UNKNOWN";
-                                    arrow = null;  // No arrow, will map to UNDEFINED
-                                } else {
-                                    // Try compact date format with description (undefined direction)
-                                    matcher = AMR_COMPACT_DATE_DESCRIPTION_PATTERN.matcher(fileName);
-                                    if (matcher.matches()) {
-                                        var dateStr = matcher.group(1) + matcher.group(2);  // Combine date and time
-                                        dateTime = parseCompactDateTime(dateStr);
-                                        contactName = matcher.group(3);
-                                        contactPhone = "UNKNOWN";
-                                        arrow = null;  // No arrow, will map to UNDEFINED
-                                    } else {
-                                        // Try compact date format only (undefined direction)
-                                        matcher = AMR_COMPACT_DATE_ONLY_PATTERN.matcher(fileName);
-                                        if (matcher.matches()) {
-                                            var dateStr = matcher.group(1) + matcher.group(2);  // Combine date and time
-                                            dateTime = parseCompactDateTime(dateStr);
-                                            contactName = "UNKNOWN";
-                                            contactPhone = "UNKNOWN";
-                                            arrow = null;  // No arrow, will map to UNDEFINED
-                                        } else {
-                                            // Try unknown named contact without phone
-                                            matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
-                                            if (matcher.matches()) {
-                                                contactName = matcher.group(1);
-                                                contactPhone = matcher.group(1);
-                                                arrow = matcher.group(2);
-                                                dateTime = AmrDateTimeParser.parseDateTime(fileName);
-                                            } else {
-                                                // Try unidentified caller pattern (just ID number)
-                                                matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
-                                                if (!matcher.matches()) {
-                                                    return Optional.empty();
-                                                }
-                                                contactName = matcher.group(1);
-                                                contactPhone = matcher.group(1);  // Use ID as phone for unidentified
-                                                arrow = matcher.group(2);
-                                                dateTime = AmrDateTimeParser.parseDateTime(fileName);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                }
-            }
-        }
+            return Optional.of(new AmrPhoneData(
+                matcher.group(1),
+                "FACEBOOK",
+                null,
+                AmrDateTimeParser.parseDateTime(matcher.group(2))
+            ));
         }
         
-        // Determine call direction based on arrow (null means OUTGOING by default, unless it's a compact date format)
-        var direction = (arrow == null && contactPhone.equals("UNKNOWN")) ? MediaCommands.CallDirection.UNDEFINED :
-                        arrow == null ? MediaCommands.CallDirection.OUTGOING : switch(arrow) {
+        // Try reversed format with phone only (date at end, no contact name)
+        matcher = AMR_REVERSED_PHONE_ONLY_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            var contactPhone = matcher.group(1);
+            return Optional.of(new AmrPhoneData(
+                contactPhone,
+                contactPhone,
+                matcher.group(2),
+                AmrDateTimeParser.parseDateTime(matcher.group(3))
+            ));
+        }
+        
+        // Try reversed format with contact name (date at end)
+        matcher = AMR_REVERSED_LOCAL_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            return Optional.of(new AmrPhoneData(
+                matcher.group(1),
+                matcher.group(2),
+                matcher.group(3),
+                AmrDateTimeParser.parseDateTime(matcher.group(4))
+            ));
+        }
+        
+        return Optional.empty();
+    }
+
+    /// Try standard phone patterns with arrow (date-first format)
+    /// Patterns: AMR_INTERNATIONAL_PATTERN, AMR_LOCAL_PATTERN, AMR_UNIDENTIFIED_PATTERN, AMR_NAME_ONLY_PATTERN
+    private Optional<AmrPhoneData> tryMatchStandardPhoneWithArrow(String fileName) {
+        // Try international pattern (with contact name and + phone)
+        var matcher = AMR_INTERNATIONAL_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            return Optional.of(new AmrPhoneData(
+                matcher.group(1),
+                matcher.group(2),
+                matcher.group(3),
+                AmrDateTimeParser.parseDateTime(fileName)
+            ));
+        }
+        
+        // Try local pattern (with contact name and local phone)
+        matcher = AMR_LOCAL_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            return Optional.of(new AmrPhoneData(
+                matcher.group(1),
+                matcher.group(2),
+                matcher.group(3),
+                AmrDateTimeParser.parseDateTime(fileName)
+            ));
+        }
+        
+        // Try unidentified caller pattern (just ID number)
+        matcher = AMR_UNIDENTIFIED_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            var contactId = matcher.group(1);
+            return Optional.of(new AmrPhoneData(
+                contactId,
+                contactId,
+                matcher.group(2),
+                AmrDateTimeParser.parseDateTime(fileName)
+            ));
+        }
+        
+        // Try unknown named contact without phone
+        matcher = AMR_NAME_ONLY_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            var contactName = matcher.group(1);
+            return Optional.of(new AmrPhoneData(
+                contactName,
+                contactName,
+                matcher.group(2),
+                AmrDateTimeParser.parseDateTime(fileName)
+            ));
+        }
+        
+        return Optional.empty();
+    }
+
+    /// Try standard phone pattern without arrow (defaults to OUTGOING)
+    /// Pattern: AMR_LOCAL_NO_ARROW_PATTERN
+    private Optional<AmrPhoneData> tryMatchStandardPhoneNoArrow(String fileName) {
+        var matcher = AMR_LOCAL_NO_ARROW_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            return Optional.of(new AmrPhoneData(
+                matcher.group(1),
+                matcher.group(2),
+                null,
+                AmrDateTimeParser.parseDateTime(fileName)
+            ));
+        }
+        return Optional.empty();
+    }
+
+    /// Try social media patterns (Facebook, WhatsApp) in standard format
+    /// Patterns: AMR_FACEBOOK_PATTERN, AMR_WHATSAPP_PATTERN
+    private Optional<AmrPhoneData> tryMatchSocialMediaStandardFormat(String fileName) {
+        // Try Facebook call pattern (defaults to OUTGOING)
+        var matcher = AMR_FACEBOOK_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            return Optional.of(new AmrPhoneData(
+                matcher.group(1),
+                "FACEBOOK",
+                null,
+                AmrDateTimeParser.parseDateTime(fileName)
+            ));
+        }
+        
+        // Try WhatsApp call pattern (defaults to OUTGOING)
+        matcher = AMR_WHATSAPP_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            return Optional.of(new AmrPhoneData(
+                matcher.group(1),
+                "WHATSAPP",
+                null,
+                AmrDateTimeParser.parseDateTime(fileName)
+            ));
+        }
+        
+        return Optional.empty();
+    }
+
+    /// Try generic recording pattern with standard datetime format
+    /// Pattern: AMR_DATED_DESCRIPTION_PATTERN
+    private Optional<AmrPhoneData> tryMatchGenericRecordingStandardFormat(String fileName) {
+        var matcher = AMR_DATED_DESCRIPTION_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            return Optional.of(new AmrPhoneData(
+                matcher.group(1),
+                "UNKNOWN",
+                null,
+                AmrDateTimeParser.parseDateTime(fileName)
+            ));
+        }
+        return Optional.empty();
+    }
+
+    /// Try compact date format patterns (yyyyMMddHHmmss)
+    /// Patterns: AMR_COMPACT_DATE_DESCRIPTION_PATTERN, AMR_COMPACT_DATE_ONLY_PATTERN
+    private Optional<AmrPhoneData> tryMatchCompactDateFormat(String fileName) {
+        // Try compact date format with description (undefined direction)
+        var matcher = AMR_COMPACT_DATE_DESCRIPTION_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            var dateStr = matcher.group(1) + matcher.group(2);
+            return Optional.of(new AmrPhoneData(
+                matcher.group(3),
+                "UNKNOWN",
+                null,
+                parseCompactDateTime(dateStr)
+            ));
+        }
+        
+        // Try compact date format only (undefined direction)
+        matcher = AMR_COMPACT_DATE_ONLY_PATTERN.matcher(fileName);
+        if (matcher.matches()) {
+            var dateStr = matcher.group(1) + matcher.group(2);
+            return Optional.of(new AmrPhoneData(
+                "UNKNOWN",
+                "UNKNOWN",
+                null,
+                parseCompactDateTime(dateStr)
+            ));
+        }
+        
+        return Optional.empty();
+    }
+
+    /// Determine call direction based on arrow and contactPhone
+    /// null arrow defaults to OUTGOING unless contactPhone is UNKNOWN (then UNDEFINED)
+    private MediaCommands.CallDirection determineDirection(String arrow, String contactPhone) {
+        if (arrow == null) {
+            return contactPhone.equals("UNKNOWN") 
+                ? MediaCommands.CallDirection.UNDEFINED 
+                : MediaCommands.CallDirection.OUTGOING;
+        }
+        return switch(arrow) {
             case "↙" -> MediaCommands.CallDirection.INCOMING;
             case "↗" -> MediaCommands.CallDirection.OUTGOING;
-            default -> throw new IllegalStateException("Unexpected value: " + arrow);
+            default -> throw new IllegalStateException("Unexpected arrow value: " + arrow);
         };
-
-        // Create meta from available parts
-        var meta = new MediaCommands.AmrPhoneCallMeta(
-            dateTime,
-            contactName,
-            contactPhone,
-            direction,
-            value);
-        
-        var cmd = new MediaCommands.RenameMediaItem(value, meta);
-        return Optional.of(cmd);
     }
 
     /// Parse compact date-time format: yyyyMMddHHmmss
