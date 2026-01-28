@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
@@ -138,8 +139,8 @@ public class Media {
 
         var matchedCommands = renameStrategies.stream()
             .map(rs -> rs.tryRename(value))
-            .filter(java.util.Optional::isPresent)
-            .map(java.util.Optional::get)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
             .toList();
         
         if (matchedCommands.size() > 1) {

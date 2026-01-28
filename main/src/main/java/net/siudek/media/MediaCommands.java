@@ -2,6 +2,7 @@ package net.siudek.media;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.time.format.DateTimeFormatter;
 
 /// Defines all possible commands emitted by Media related to media assets.
@@ -17,6 +18,7 @@ public sealed interface MediaCommands {
     }
 
     record GenericMeta(LocalDateTime date, String extension, Path location) implements Meta {}
+    record GenericMetaYear(Year date, String content, String extension, Path location) implements Meta {}
     
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) .amr
@@ -34,6 +36,12 @@ public sealed interface MediaCommands {
             case GenericMeta genericMeta -> {
                 var date = genericMeta.date();
                 yield date.format(formatter) + "." + genericMeta.extension();
+            }
+            case GenericMetaYear genericMetaYear -> {
+                yield String.format("%s %s.%s",
+                    genericMetaYear.date().getValue(),
+                    genericMetaYear.content(),
+                    genericMetaYear.extension());
             }
             case AmrPhoneCallMeta phoneCallMeta -> {
                 var direction = switch (phoneCallMeta.direction()) {
