@@ -2,7 +2,7 @@ package net.siudek.media;
 
 import java.nio.file.Path;
 
-/// All supported types of directories and files, allowed to be a part of Media assets.  
+/// All recognized types of directories and files, allowed to be a part of Media assets.  
 public sealed interface Source {
     sealed interface Dir extends Source {}
     sealed interface File extends Source {}

@@ -1,5 +1,6 @@
 package net.siudek.media;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -64,7 +65,7 @@ public final class Sources {
         return isDvd ? Optional.of(new Source.DvdDir(path)) : Optional.empty();
     }
 
-    @SneakyThrows(java.io.IOException.class)
+    @SneakyThrows(IOException.class)
     static Source.Dir asMediaDir(Path path) {
 
       if (isGitRepository(path).isPresent()) {
