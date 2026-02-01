@@ -29,7 +29,8 @@ mvnw.cmd clean package
 mvnw.cmd spring-boot:run -Dspring-boot.run.arguments="start"
 ```
 
-## Spring Shell
+### Data structure
+The application models and manages structure of media files located in static, well structurized folders.
 
-The application includes an interactive Spring Shell CLI. When you run the application, you'll see a shell prompt where you can execute commands.
+- TBD
 

@@ -9,23 +9,28 @@ import java.time.format.DateTimeFormatter;
 /// Such commands, when stored, can be executed later on media assets.
 public sealed interface MediaCommands {
 
+    /// Represents possible metadata extracted from media files.
+    /// For example, if name of the file allows to extract date, contact name, phone number, etc.
+    /// as we have multiple options hidden in filenames, we define multiple implementations of Meta.
     sealed interface Meta { }
 
+    record GenericMeta(LocalDateTime date, String extension, Path location) implements Meta {}
+
+    record GenericMetaYear(Year date, String content, String extension, Path location) implements Meta {}
+    
     enum CallDirection {
         INCOMING,
         OUTGOING,
         UNDEFINED
     }
 
-    record GenericMeta(LocalDateTime date, String extension, Path location) implements Meta {}
-    record GenericMetaYear(Year date, String content, String extension, Path location) implements Meta {}
-    
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) ↗.amr
     /// name example: 2021-11-14 15-57-45 (phone) John Doe (+48 123 456 789) .amr
     record AmrPhoneCallMeta(LocalDateTime dateTime, String contactName, String contactPhone, CallDirection direction, Path location) implements Meta {}
 
     record AmrMicRecordingMeta(LocalDateTime dateTime, String title, Path location) implements Meta {}
 
+    
     /// Rename media file to the new name without changing its location.
     record RenameMediaItem(Path from, Meta meta) implements MediaCommands {}
 
