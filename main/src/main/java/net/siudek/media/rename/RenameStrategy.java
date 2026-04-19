@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import net.siudek.media.MediaCommands;
 
+/// Naming of the media files should be normalized so that they can be processed in a simpler way
 public interface RenameStrategy {
     
     /// Try to rename the given file according to specific strategy.
