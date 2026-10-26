@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "media-files": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${workspaceFolder}\\mcp\\start.py"],
+      "cwd": "${workspaceFolder}\\mcp"
+    }
+  }
+}
