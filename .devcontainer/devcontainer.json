@@ -8,5 +8,15 @@
 	// https://containers.dev/features
 	"features": {
     	"ghcr.io/devcontainer-community/devcontainer-features/astral.sh-uv:1": {}
-	}
+	},
+
+	// Keep SSH keys in a Docker volume so they survive container rebuilds.
+	// Keep Copilot CLI credentials and settings in a separate persistent volume.
+	"mounts": [
+		"source=media_project-ssh,target=/home/vscode/.ssh,type=volume",
+		"source=media_project-copilot,target=/home/vscode/.copilot,type=volume"
+	],
+
+	// Set the mounted directories' owner to vscode and apply the permissions required by SSH.
+	"postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.ssh /home/vscode/.copilot && chmod 700 /home/vscode/.ssh && find /home/vscode/.ssh -type f -exec chmod 600 {} +"
 }

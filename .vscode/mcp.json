@@ -2,9 +2,9 @@
   "servers": {
     "media-files": {
       "type": "stdio",
-      "command": "python",
-      "args": ["${workspaceFolder}\\mcp\\start.py"],
-      "cwd": "${workspaceFolder}\\mcp"
+      "command": "uv",
+      "args": ["run", "--locked", "media-mcp"],
+      "cwd": "${workspaceFolder}/mcp"
     }
   }
 }
