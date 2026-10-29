@@ -1,8 +1,6 @@
 # Media Project
 
-The project exposes media-library operations exclusively through local MCP
-servers. Each server and its tests live under `mcp/`; the media server reads
-and changes files only inside explicitly configured roots.
+The project exposes media-library operations exclusively through local MCP servers. Each server and its tests live under `mcp/`; the media server reads and changes files only inside explicitly configured roots.
 
 ## Media MCP server
 
@@ -13,12 +11,7 @@ The current server provides tools to:
 - create per-file JSON inventory records in a separate catalog directory;
 - rename files and move them between existing directories in the same root.
 
-It does not read arbitrary file contents, delete or copy files, follow symbolic
-links/reparse points, create destination directories for move operations, or
-overwrite files. Directories containing `no_media.json` are excluded from
-inventory generation. Existing catalog records are preserved and reported as
-skipped. Rename and move tools execute immediately after validation; they do
-not have a separate confirmation step.
+It does not read arbitrary file contents, delete or copy files, follow symbolic links/reparse points, create destination directories for move operations, or overwrite files. Directories containing `no_media.json` are excluded from inventory generation. Existing catalog records are preserved and reported as skipped. Rename and move tools execute immediately after validation; they do not have a separate confirmation step.
 
 ### Configure and start
 
