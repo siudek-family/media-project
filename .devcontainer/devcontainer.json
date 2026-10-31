@@ -3,20 +3,24 @@
 {
 	"name": "media_project",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/python:3-3.14-trixie",
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu",
 
 	// https://containers.dev/features
 	"features": {
-    	"ghcr.io/devcontainer-community/devcontainer-features/astral.sh-uv:1": {}
+		"ghcr.io/devcontainers/features/python:1": {},
+		"ghcr.io/devcontainer-community/devcontainer-features/astral.sh-uv:1": {},
+		"ghcr.io/devcontainers/features/copilot-cli:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
 	},
 
 	// Keep SSH keys in a Docker volume so they survive container rebuilds.
 	// Keep Copilot CLI credentials and settings in a separate persistent volume.
 	"mounts": [
 		"source=media_project-ssh,target=/home/vscode/.ssh,type=volume",
-		"source=media_project-copilot,target=/home/vscode/.copilot,type=volume"
+		"source=media_project-copilot,target=/home/vscode/.copilot,type=volume",
+		"source=/mnt/x/OneDrive/Osobiste/Media,target=/mnt/media,type=bind"
 	],
 
 	// Set the mounted directories' owner to vscode and apply the permissions required by SSH.
-	"postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.ssh /home/vscode/.copilot && chmod 700 /home/vscode/.ssh && find /home/vscode/.ssh -type f -exec chmod 600 {} +"
+	"postCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.ssh /home/vscode/.copilot && chmod 700 /home/vscode/.ssh && find /home/vscode/.ssh -type f -exec chmod 600 {} + && python3 .devcontainer/trust_workspace.py"
 }

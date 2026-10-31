@@ -1,6 +1,6 @@
 # Media Project
 
-The project exposes media-library operations exclusively through local MCP servers. Each server and its tests live under `mcp/`; the media server reads and changes files only inside explicitly configured roots.
+The project exposes media-library operations exclusively through local MCP servers. The server and its tests live at the repository root; the media server reads and changes files only inside explicitly configured roots.
 
 ## Media MCP server
 
@@ -18,7 +18,7 @@ It does not read arbitrary file contents, delete or copy files, follow symbolic 
 1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and
    make its `uv` command available to VS Code. Check it with `uv --version`.
    `uv` uses a compatible Python 3.10+ interpreter, downloading one if needed.
-2. Edit `MEDIA_ROOTS` in `mcp/media_server/config.py`, adding only trusted,
+2. Edit `MEDIA_ROOTS` in `media_server/config.py`, adding only trusted,
    absolute media directories, for example:
 
    ```python
@@ -35,9 +35,9 @@ It does not read arbitrary file contents, delete or copy files, follow symbolic 
    required for the configured media and catalog directories. Application
    path validation is not a replacement for operating-system ACL isolation.
 4. Start/restart `media-files` in VS Code. `.vscode/mcp.json` invokes
-   `uv run --locked media-mcp` with `mcp/` as the working directory. `uv`
-   creates `mcp/.venv` if missing, synchronizes the local package and its runtime
-   dependencies from `mcp/uv.lock`, then starts the server over stdio. No manual
+   `uv run --locked media-mcp` with the repository root as the working directory. `uv`
+   creates `.venv` if missing, synchronizes the local package and its runtime
+   dependencies from `uv.lock`, then starts the server over stdio. No manual
    environment setup or `pip` command is needed for normal use.
 
 The environment is checked on every start; synchronized packages are reused
@@ -50,7 +50,7 @@ to version 1.x because this server uses its `FastMCP` API.
 
 ### Run tests
 
-From the `mcp/` project directory, sync the development dependencies and run
+From the repository root, sync the development dependencies and run
 the tests and type checker with `uv`:
 
 ```sh
