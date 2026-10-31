@@ -1,6 +1,7 @@
 """MCP tools for a locally configured media collection."""
 
 import json
+import sys
 
 from mcp.server.fastmcp import FastMCP
 
@@ -76,5 +77,9 @@ def move_media_file(
 def main() -> None:
     """Start the MCP server over stdio."""
     global media_service
-    media_service = load_media_service()
+    try:
+        media_service = load_media_service()
+    except MediaConfigurationError as error:
+        print(f"Media MCP server failed to start: {error}", file=sys.stderr)
+        raise SystemExit(1) from None
     mcp.run()
