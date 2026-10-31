@@ -10,7 +10,8 @@
 		"ghcr.io/devcontainers/features/python:1": {},
 		"ghcr.io/devcontainer-community/devcontainer-features/astral.sh-uv:1": {},
 		"ghcr.io/devcontainers/features/copilot-cli:1": {},
-		"ghcr.io/devcontainers/features/github-cli:1": {}
+		"ghcr.io/devcontainers/features/github-cli:1": {},
+		"ghcr.io/jrussellsmyth/devcontainer-features/openspec:1": {}
 	},
 
 	// Keep SSH keys in a Docker volume so they survive container rebuilds.
