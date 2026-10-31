@@ -1,4 +1,5 @@
 import json
+from types import SimpleNamespace
 
 from media_server import server
 
@@ -19,9 +20,9 @@ def test_server_registers_expected_tools() -> None:
 
 def test_root_listing_does_not_disclose_paths(monkeypatch) -> None:
     monkeypatch.setattr(
-        server.media_service,
-        "configured_roots",
-        lambda: [{"root_id": "family"}],
+        server,
+        "media_service",
+        SimpleNamespace(configured_roots=lambda: [{"root_id": "family"}]),
     )
 
     assert json.loads(server.list_configured_roots()) == [

@@ -18,19 +18,22 @@ It does not read arbitrary file contents, delete or copy files, follow symbolic 
 1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and
    make its `uv` command available to VS Code. Check it with `uv --version`.
    `uv` uses a compatible Python 3.10+ interpreter, downloading one if needed.
-2. Edit `MEDIA_ROOTS` in `media_server/config.py`, adding only trusted,
-   absolute media directories, for example:
+2. Edit `media_server/config.json`, adding only trusted, absolute media
+   directories and an existing catalog directory, for example:
 
-   ```python
-   MEDIA_ROOTS = {
-       "family": Path(r"X:\Media\Family"),
+   ```json
+   {
+     "media_roots": {
+       "family": "/mnt/media/Family"
+     },
+     "catalog_root": "/mnt/media/catalog"
    }
    ```
 
-   The configuration intentionally starts empty, so filesystem tools fail
-   closed until an operator configures roots. `CATALOG_ROOT` is currently
-   `X:\OneDrive\Osobiste\Media\source`; change it to the desired absolute
-   catalog path if appropriate. It must not overlap any configured media root.
+   The server validates at startup that every configured path is absolute,
+   exists, and is a directory. It exits with an error if a directory is
+   missing or if the catalog overlaps a media root. Create the catalog
+   directory before starting the server.
 3. Grant the Windows account running VS Code only the filesystem permissions
    required for the configured media and catalog directories. Application
    path validation is not a replacement for operating-system ACL isolation.

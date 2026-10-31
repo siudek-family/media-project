@@ -67,6 +67,23 @@ class MediaFileService:
         """Return configured root identifiers without revealing host paths."""
         return [{"root_id": root_id} for root_id in sorted(self._media_roots)]
 
+    def validate_configuration(self) -> None:
+        """Validate all configured roots and the existing separate catalog."""
+        for root_id in self._media_roots:
+            self._get_root(root_id)
+
+        catalog_root = self._get_catalog_root()
+        try:
+            catalog_root = catalog_root.resolve(strict=True)
+        except OSError as error:
+            raise MediaConfigurationError(
+                f"Configured catalog directory is unavailable: {error}"
+            ) from error
+        if not catalog_root.is_dir():
+            raise MediaConfigurationError(
+                "Configured catalog path is not a directory."
+            )
+
     def _get_root(self, root_id: str) -> Path:
         """Resolve and validate one configured media root."""
         if not self._media_roots:
