@@ -53,9 +53,7 @@ def parse_media_configuration(data: object) -> MediaConfiguration:
     return MediaConfiguration(media_roots, Path(catalog_path))
 
 
-def load_media_service(
-    config_path: Path = CONFIG_PATH,
-) -> MediaFileService:
+def load_media_service(config_path: Path = CONFIG_PATH) -> MediaFileService:
     """Load configuration and fail if any configured directory is unavailable."""
     try:
         with config_path.open(encoding="utf-8") as config_file:
